@@ -123,16 +123,17 @@ def run_simulation():
 
     # plotting x and y over t, to see their time evolution
     plt.figure(1)
-    plt.plot(times, x_coordinates, color='orange', label='x coordinate')
-    plt.plot(times, y_coordinates, color='cyan', label='y coordinate')
+    plt.plot(times, x_coordinates, label='x coordinate', color='orange')
+    plt.plot(times, y_coordinates, label='y coordinate', color='cyan')
     plt.legend(loc='best')
     plt.xlabel('Time (s)')
     plt.ylabel('Space (m)')
 
     # plotting y over x, to see the trajectory on the 2d plane
     plt.figure(2)
-    plt.plot(x_coordinates, y_coordinates, color='teal', label='trajectory')
-    plt.plot(x_0, y_0, color='red', marker='o', label='origin')
+    plt.plot(x_coordinates, y_coordinates, label='trajectory', color='teal')
+    plt.plot(x_0, y_0, label='origin',
+    color='red', marker='o', linestyle='None')
     plt.legend(loc='best')
     plt.xlabel("x (m)")
     plt.ylabel("y (m)")
@@ -184,9 +185,19 @@ def test_exponential_distribution():
     assert observed == pytest.approx(expected)
 
 
-def test_init_time_state():
+def test_init_time_state_1():
     empty_time_state = init_space_state()
     assert empty_time_state is None
+
+
+def test_init_time_state_2():
+    time_state = init_time_state(1.0)
+    assert len(time_state) == 1
+
+
+def test_init_time_state_3():
+    time_state = init_time_state(3.0)
+    assert time_state == [3.0]
 
 
 def test_time_state_updater_1():
@@ -209,9 +220,19 @@ def test_time_state_updater_2():
     assert len(observed_times) == n_points
 
 
-def test_init_space_state():
+def test_init_space_state_1():
     empty_space_state = init_space_state()
     assert empty_space_state is None
+
+
+def test_init_space_state_2():
+    space_state = init_space_state(1.0)
+    assert len(space_state) == 1
+
+
+def test_init_space_state_3():
+    space_state = init_space_state(3.0)
+    assert space_state == [3.0]
 
 
 def test_space_state_updater_1():
