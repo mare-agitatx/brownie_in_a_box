@@ -69,7 +69,7 @@ def time_state_updater(time_list, n_points,
     time_parameters that are passed to the distribution() function.
     The distribution is passed as a name so that the user may set any
     time distribution as they see fit, since more than a proper choice for
-    the time stathistics is possible.
+    the time statistics is possible.
     '''
     if len(time_list) == 0:
         return
@@ -128,7 +128,7 @@ def run_simulation():
     plt.legend(loc='best')
     plt.xlabel('Time (s)')
     plt.ylabel('Space (m)')
-    
+
     # plotting y over x, to see the trajectory on the 2d plane
     plt.figure(2)
     plt.plot(x_coordinates, y_coordinates, color='teal', label='trajectory')
@@ -136,7 +136,7 @@ def run_simulation():
     plt.legend(loc='best')
     plt.xlabel("x (m)")
     plt.ylabel("y (m)")
-    
+
     plt.show()
 
 
@@ -237,3 +237,13 @@ def test_space_state_updater_2():
         expected.append(new_point)
 
     assert observed == expected
+
+
+def test_space_state_updater_3():
+    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
+    gaussian_parameters = (0.0, 1.0, 50)
+
+    space_state = [0.1]
+    space_state_updater(space_state, time_state, *gaussian_parameters)
+
+    assert len(space_state) == len(time_state)
