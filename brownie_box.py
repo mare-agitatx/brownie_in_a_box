@@ -71,8 +71,6 @@ def time_state_updater(time_list, n_points,
     time distribution as they see fit, since more than a proper choice for
     the time statistics is possible.
     '''
-    if len(time_list) == 0:
-        return
     for i in range(1, n_points):
         new_time_value = time_list[-1] + time_distribution(*time_parameters)
         time_list.append(new_time_value)
@@ -167,7 +165,7 @@ def test_brownian_formula_2():
     assert observed == pytest.approx(expected)
 
 
-def test_gaussian_distribution():
+def test_gaussian_distribution_1():
     rng = np.random.default_rng(42)
     mu, sigma = 0.0, 1.0
 
@@ -176,13 +174,26 @@ def test_gaussian_distribution():
     assert observed == pytest.approx(expected)
 
 
-def test_exponential_distribution():
+def test_gaussian_distribution_2():
+    mu = 2.0
+    observed = gaussian_distribution(mu, 0.0)
+    assert observed == pytest.approx(mu)
+
+
+def test_exponential_distribution_1():
     rng = np.random.default_rng(69)
     beta = 1.0
 
     expected = rng.exponential(beta)
     observed = exponential_distribution(1.0, 69)
     assert observed == pytest.approx(expected)
+
+
+def test_exponential_distribution_2():
+    beta = 0.0
+
+    observed = exponential_distribution(0.0)
+    assert observed == pytest.approx(0.0)
 
 
 def test_init_time_state_1():
