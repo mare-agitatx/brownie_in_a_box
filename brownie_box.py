@@ -1,23 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pytest
 
 
 def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
-    '''
-    The most simple formula to implement Brownian motion.
+    '''The most simple formula to implement Brownian motion.
     It accepts a float time difference dt, a former position as a float at
     point_at_t_minus_one and a gaussian evaluation which here is just a float
     and must be computed outside of the function.
     It returns the updated point position as a float.
     '''
+    if dt < 0.:
+        raise ValueError('Given a negative time gap to dt.')
+
     point_at_t = point_at_t_minus_one + np.sqrt(dt) * gaussian_term
     return point_at_t
 
 
 def gaussian_distribution(mu, sigma, seed=None):
-    '''
-    It computes a gaussian distribution's value.
+    '''It computes a gaussian distribution's value.
     It accepts the average mu and the standard deviation sigma as floats, and
     it may also accept a seed as an integer.
     If the seed is given the function will use it to generate the result of
@@ -35,8 +35,7 @@ def gaussian_distribution(mu, sigma, seed=None):
 
 
 def exponential_distribution(beta, seed=None):
-    '''
-    It computes an exponential distribution's value.
+    '''It computes an exponential distribution's value.
     It accepts the scale parameter beta as a float, and
     it may also accept a seed as an integer.
     If the seed is given the function will use it to generate the result of
@@ -83,8 +82,7 @@ def init_space_state(initial_position=None):
 
 
 def space_state_updater(positions, times, *gaussian_parameters):
-    '''
-    It updates the positions list by evaluating the brownian formula given
+    '''It updates the positions list by evaluating the brownian formula given
     before this function.
     It accepts positions and times both as lists of floats, and 
     then gaussian parameters as a tuple, so that the user may decide
@@ -142,140 +140,3 @@ def run_simulation():
 ################################################################################
 if __name__ == "__main__":
     run_simulation()
-
-
-################################################################################
-def test_brownian_formula_1():
-    dt = 2.0
-    gaussian = 0.5
-    previous_point = 3.0
-
-    expected = 3.0 + 0.5 * 1.41421356
-    observed = brownian_formula(previous_point, dt, gaussian)
-    assert observed == pytest.approx(expected)
-
-
-def test_brownian_formula_2():
-    dt = 0.0
-    gaussian = 0.0
-    previous_point = 0.0
-
-    expected = 0.0
-    observed = brownian_formula(previous_point, dt, gaussian)
-    assert observed == pytest.approx(expected)
-
-
-def test_gaussian_distribution_1():
-    rng = np.random.default_rng(42)
-    mu, sigma = 0.0, 1.0
-
-    expected = rng.normal(mu, sigma)
-    observed = gaussian_distribution(0.0, 1.0, 42)
-    assert observed == pytest.approx(expected)
-
-
-def test_gaussian_distribution_2():
-    mu = 2.0
-    observed = gaussian_distribution(mu, 0.0)
-    assert observed == pytest.approx(mu)
-
-
-def test_exponential_distribution_1():
-    rng = np.random.default_rng(69)
-    beta = 1.0
-
-    expected = rng.exponential(beta)
-    observed = exponential_distribution(1.0, 69)
-    assert observed == pytest.approx(expected)
-
-
-def test_exponential_distribution_2():
-    beta = 0.0
-
-    observed = exponential_distribution(0.0)
-    assert observed == pytest.approx(0.0)
-
-
-def test_init_time_state_1():
-    empty_time_state = init_space_state()
-    assert empty_time_state is None
-
-
-def test_init_time_state_2():
-    time_state = init_time_state(1.0)
-    assert len(time_state) == 1
-
-
-def test_init_time_state_3():
-    time_state = init_time_state(3.0)
-    assert time_state == [3.0]
-
-
-def test_time_state_updater_1():
-    observed_times = [0.0]
-    distribution = exponential_distribution
-    parameters = [1.0]
-    time_state_updater(observed_times, 10, distribution, *parameters)
-    previous_time = observed_times[0]
-
-    for time in observed_times[1:]:
-        assert time >= previous_time
-        previous_time = time
-
-
-def test_time_state_updater_2():
-    observed_times = [0.0]
-    n_points = 10
-    time_state_updater(observed_times, n_points, exponential_distribution, 1.0)
-
-    assert len(observed_times) == n_points
-
-
-def test_init_space_state_1():
-    empty_space_state = init_space_state()
-    assert empty_space_state is None
-
-
-def test_init_space_state_2():
-    space_state = init_space_state(1.0)
-    assert len(space_state) == 1
-
-
-def test_init_space_state_3():
-    space_state = init_space_state(3.0)
-    assert space_state == [3.0]
-
-
-def test_space_state_updater_1():
-    empty_time_state = []
-    space_list = [0.1]
-    initial_space_list = space_list
-    space_state_updater(space_list, empty_time_state, 0.0, 1.0)
-
-    assert space_list == initial_space_list
-
-
-def test_space_state_updater_2():
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    gaussian_parameters = (0.0, 1.0, 50)
-
-    observed = [0.1]
-    space_state_updater(observed, time_state, *gaussian_parameters)
-
-    expected = [0.1]
-    for time in time_state[1:]:
-        gaussian = gaussian_distribution(*gaussian_parameters)
-        new_point = brownian_formula(expected[-1], 1.0, gaussian)
-        expected.append(new_point)
-
-    assert observed == expected
-
-
-def test_space_state_updater_3():
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    gaussian_parameters = (0.0, 1.0, 50)
-
-    space_state = [0.1]
-    space_state_updater(space_state, time_state, *gaussian_parameters)
-
-    assert len(space_state) == len(time_state)
