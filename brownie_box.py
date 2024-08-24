@@ -110,7 +110,8 @@ def run_simulation():
 
     # initializing the states
     times = init_time_state(t_0)
-    x_coordinates, y_coordinates = init_space_state(x_0), init_space_state(y_0)
+    x_coordinates = init_space_state(x_0)
+    y_coordinates = init_space_state(y_0)
 
     # updating the states
     time_state_updater(times, n_points, exponential_distribution, beta)
@@ -118,25 +119,27 @@ def run_simulation():
     space_state_updater(y_coordinates, times, mu, sigma)
 
     # plotting x and y over t, to see their time evolution
-    plt.figure(1)
-    plt.plot(times, x_coordinates, label='x coordinate', color='orange')
-    plt.plot(times, y_coordinates, label='y coordinate', color='cyan')
-    plt.legend(loc='best')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Space (m)')
+    fig1, ax1 = plt.subplots()
+    ax1.plot(times, x_coordinates, label='x coordinate', color='orange')
+    ax1.plot(times, y_coordinates, label='y coordinate', color='cyan')
+    ax1.legend(loc='best')
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Space')
+    ax1.set_title('Time evolution of the coordinates')
 
     # plotting y over x, to see the trajectory on the 2d plane
-    plt.figure(2)
-    plt.plot(x_coordinates, y_coordinates, label='trajectory', color='teal')
-    plt.plot(x_0, y_0, label='origin',
-    color='red', marker='o', linestyle='None')
-    plt.legend(loc='best')
-    plt.xlabel("x (m)")
-    plt.ylabel("y (m)")
+    fig2, ax2 = plt.subplots()
+    ax2.plot(x_coordinates, y_coordinates, label='trajectory', color='teal')
+    ax2.plot(x_0, y_0, label='origin',
+                color='red', marker='o', linestyle='None')
+    ax2.legend(loc='best')
+    ax2.set_xlabel("x")
+    ax2.set_ylabel("y")
+    ax2.set_title('Trajectory on the xy plane')
 
     plt.show()
 
 
-################################################################################
+###############################################################################
 if __name__ == "__main__":
     run_simulation()
