@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
 
 
 def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
@@ -81,7 +83,8 @@ def init_space_state(initial_position=None):
     return [initial_position]
 
 
-def space_state_updater(positions, times, *gaussian_parameters):
+def space_state_updater(positions, interval_min, interval_max,
+                        times, *gaussian_parameters):
     '''It updates the positions list by evaluating the brownian formula given
     before this function.
     It accepts positions and times both as lists of floats, and 
@@ -91,6 +94,8 @@ def space_state_updater(positions, times, *gaussian_parameters):
     '''
     if len(times) == 0:
         return
+    if positions[0] < interval_min or positions[0] > interval_max:
+        raise ValueError('The starting point is out of bounds.')
 
     previous_time = times[0]
     for time in times[1:]:
@@ -98,6 +103,17 @@ def space_state_updater(positions, times, *gaussian_parameters):
         gaussian_term = gaussian_distribution(*gaussian_parameters)
         previous_point = positions[-1]
         new_point = brownian_formula(previous_point, dt, gaussian_term)
+
+        if new_point < interval_min:
+            gap = abs(new_point - interval_min)
+            reflected_position = interval_min + gap
+            new_point = reflected_position
+
+        if new_point > interval_max:
+            gap = abs(interval_max - new_point)
+            reflected_position = interval_max - gap
+            new_point = reflected_position
+
         positions.append(new_point)
         previous_time = time
 
@@ -105,7 +121,9 @@ def space_state_updater(positions, times, *gaussian_parameters):
 def run_simulation():
     # initializing the parameters
     mu, sigma, beta = 0.0, 1.0, 1.0
-    x_0, y_0, t_0 = 0.0, 0.0, 0.0
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -12.0, 12.0
+    x_0, y_0, t_0 = 5.0, 2.0, 0.0
     n_points = 1000
 
     # initializing the states
@@ -115,13 +133,17 @@ def run_simulation():
 
     # updating the states
     time_state_updater(times, n_points, exponential_distribution, beta)
-    space_state_updater(x_coordinates, times, mu, sigma)
-    space_state_updater(y_coordinates, times, mu, sigma)
+    space_state_updater(x_coordinates, x_min, x_max, times, mu, sigma)
+    space_state_updater(y_coordinates, y_min, y_max, times, mu, sigma)
 
     # plotting x and y over t, to see their time evolution
     fig1, ax1 = plt.subplots()
     ax1.plot(times, x_coordinates, label='x coordinate', color='orange')
     ax1.plot(times, y_coordinates, label='y coordinate', color='cyan')
+    ax1.hlines([x_min, x_max], times[0], times[-1],
+                label='x boundaries', color='orange', linestyle='dashed')
+    ax1.hlines([y_min, y_max],  times[0], times[-1],
+                label='y boundaries', color='cyan', linestyle='dashed')
     ax1.legend(loc='best')
     ax1.set_xlabel('Time')
     ax1.set_ylabel('Space')
@@ -131,7 +153,11 @@ def run_simulation():
     fig2, ax2 = plt.subplots()
     ax2.plot(x_coordinates, y_coordinates, label='trajectory', color='teal')
     ax2.plot(x_0, y_0, label='origin',
-                color='red', marker='o', linestyle='None')
+             color='red', marker='o', linestyle='None')
+    boundaries = Rectangle((x_min, y_min), x_max - x_min,
+                            y_max - y_min, facecolor='None', edgecolor='red',
+                            linestyle='dashed', label='boundaries')
+    ax2.add_patch(boundaries)
     ax2.legend(loc='best')
     ax2.set_xlabel("x")
     ax2.set_ylabel("y")
