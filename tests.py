@@ -1,5 +1,5 @@
 from brownie_box import *
-from pytest import approx, raises
+import pytest
 
 
 def test_brownian_formula_1():
@@ -9,7 +9,7 @@ def test_brownian_formula_1():
 
     expected = 3.0 + 0.5 * 1.41421356
     observed = brownian_formula(previous_point, dt, gaussian)
-    assert observed == approx(expected)
+    assert observed == pytest.approx(expected)
 
 
 def test_brownian_formula_2():
@@ -19,11 +19,11 @@ def test_brownian_formula_2():
 
     expected = 0.0
     observed = brownian_formula(previous_point, dt, gaussian)
-    assert observed == approx(expected)
+    assert observed == pytest.approx(expected)
 
 
 def test_brownian_formula_3():
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         dt = -1.0
         brownian_formula(1.0, dt, 1.0)
 
@@ -34,13 +34,13 @@ def test_gaussian_distribution_1():
 
     expected = rng.normal(mu, sigma)
     observed = gaussian_distribution(0.0, 1.0, 42)
-    assert observed == approx(expected)
+    assert observed == pytest.approx(expected)
 
 
 def test_gaussian_distribution_2():
     mu = 2.0
     observed = gaussian_distribution(mu, 0.0)
-    assert observed == approx(mu)
+    assert observed == pytest.approx(mu)
 
 
 def test_exponential_distribution_1():
@@ -49,14 +49,14 @@ def test_exponential_distribution_1():
 
     expected = rng.exponential(beta)
     observed = exponential_distribution(1.0, 69)
-    assert observed == approx(expected)
+    assert observed == pytest.approx(expected)
 
 
 def test_exponential_distribution_2():
     beta = 0.0
 
     observed = exponential_distribution(0.0)
-    assert observed == approx(0.0)
+    assert observed == pytest.approx(0.0)
 
 
 def test_init_time_state_1():
@@ -113,7 +113,7 @@ def test_space_state_updater_1():
     empty_time_state = []
     space_list = [0.1]
     initial_space_list = space_list
-    space_state_updater(space_list, empty_time_state, 0.0, 1.0)
+    space_state_updater(space_list, 0.0, 1.0, empty_time_state, 0.0, 1.0)
 
     assert space_list == initial_space_list
 
@@ -122,23 +122,61 @@ def test_space_state_updater_2():
     time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
     gaussian_parameters = (0.0, 1.0, 50)
 
-    observed = [0.1]
-    space_state_updater(observed, time_state, *gaussian_parameters)
+    space_state = [0.1]
+    s_min, s_max = 0.0, 1.0
+    space_state_updater(space_state, s_min, s_max,
+                        time_state, *gaussian_parameters)
 
+    assert len(space_state) == len(time_state)
+
+
+def test_space_state_updater_3():
+    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
+    seed = None
+    gaussian_parameters = (0.0, 1.0, seed)
+    s_min, s_max = 0.0, 1.0
+
+    observed = [0.1]
+    space_state_updater(observed, s_min, s_max,
+                        time_state, *gaussian_parameters)
+
+    out_of_bounds_counter = 0
     expected = [0.1]
     for time in time_state[1:]:
         gaussian = gaussian_distribution(*gaussian_parameters)
         new_point = brownian_formula(expected[-1], 1.0, gaussian)
         expected.append(new_point)
+        if new_point < s_min or new_point > s_max:
+            out_of_bounds_counter += 1
 
-    assert observed == expected
+    if out_of_bounds_counter == 0:
+        assert observed == expected
+    else:
+        assert observed != expected
 
 
-def test_space_state_updater_3():
+def test_space_state_updater_4():
     time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    gaussian_parameters = (0.0, 1.0, 50)
+    seed = None
+    gaussian_parameters = (0.0, 1.0, seed)
+    s_min, s_max = 0.0, 10.0
 
-    space_state = [0.1]
-    space_state_updater(space_state, time_state, *gaussian_parameters)
+    observed = [0.1]
+    space_state_updater(observed, s_min, s_max,
+                        time_state, *gaussian_parameters)
 
-    assert len(space_state) == len(time_state)
+    assert min(observed) >= s_min
+    assert max(observed) <= s_max
+
+
+def test_space_state_updater_5():
+    out_of_bounds_origin = 500.0
+    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
+    seed = None
+    gaussian_parameters = (0.0, 1.0, seed)
+    s_min, s_max = 0.0, 10.0
+
+    with pytest.raises(ValueError):
+        observed = [out_of_bounds_origin]
+        space_state_updater(observed, s_min, s_max,
+                            time_state, *gaussian_parameters)
