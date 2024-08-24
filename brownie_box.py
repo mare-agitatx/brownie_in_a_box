@@ -3,13 +3,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 
-
 def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
     '''The most simple formula to implement Brownian motion.
-    It accepts a float time difference dt, a former position as a float at
-    point_at_t_minus_one and a gaussian evaluation which here is just a float
-    and must be computed outside of the function.
-    It returns the updated point position as a float.
+        Parameters:
+        Returns:
     '''
     if dt < 0.:
         raise ValueError('Given a negative time gap to dt.')
@@ -20,12 +17,8 @@ def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
 
 def gaussian_distribution(mu, sigma, seed=None):
     '''It computes a gaussian distribution's value.
-    It accepts the average mu and the standard deviation sigma as floats, and
-    it may also accept a seed as an integer.
-    If the seed is given the function will use it to generate the result of
-    the distribution in a predictable manner, otherwise it will be a
-    (pseudo-)random result. 
-    It returns an output value as a float.
+        Parameters:
+        Returns:
     '''
     if seed is None:
         output = np.random.normal(mu, sigma)
@@ -38,12 +31,8 @@ def gaussian_distribution(mu, sigma, seed=None):
 
 def exponential_distribution(beta, seed=None):
     '''It computes an exponential distribution's value.
-    It accepts the scale parameter beta as a float, and
-    it may also accept a seed as an integer.
-    If the seed is given the function will use it to generate the result of
-    the distribution in a predictable manner, otherwise it will be a
-    (pseudo-)random result. 
-    It returns an output value as a float.
+        Parameters:
+        Returns:
     '''
     if seed is None:
         output = np.random.exponential(beta)
@@ -54,54 +43,54 @@ def exponential_distribution(beta, seed=None):
     return output
 
 
-def init_time_state(initial_time=None):
-    if initial_time is None:
-        return None
-    return [initial_time]
-
-
-def time_state_updater(time_list, n_points,
-    time_distribution, *time_parameters):
-    '''It updates the time list by evaluating the distribution given
-    as an input n_points - 1 times.
-    It accept a time_list as a list of floats, the number of instants n_points
-    that the list must contain as an integer, the time_distribution as a 
-    function name that is passed as input and a tuple of parameters
-    time_parameters that are passed to the distribution() function.
-    The distribution is passed as a name so that the user may set any
-    time distribution as they see fit, since more than a proper choice for
-    the time statistics is possible.
+def init_time_state(initial_time=None, n_points=None):
+    '''Something something.
+        Parameters:
+        Returns:
     '''
-    for i in range(1, n_points):
-        new_time_value = time_list[-1] + time_distribution(*time_parameters)
-        time_list.append(new_time_value)
-
-
-def init_space_state(initial_position=None):
-    if initial_position is None:
+    if initial_time is None or n_points is None:
         return None
-    return [initial_position]
+    time_state = np.empty(n_points)
+    time_state[0] = initial_time
+    return time_state
+
+
+def time_state_updater(time_array, time_distribution, *time_parameters):
+    '''It updates the time array by evaluating the distribution given
+    as an input n_points - 1 times.
+        Parameters:
+    '''
+    for i in range(1, len(time_array)):
+        time_array[i] = time_array[i-1] + time_distribution(*time_parameters)
+
+
+def init_space_state(initial_position=None, n_points=None):
+    '''Something something.
+        Parameters:
+        Returns:
+    '''
+    if initial_position is None or n_points is None:
+        return None
+    space_state = np.empty(n_points)
+    space_state[0] = initial_position
+    return space_state
 
 
 def space_state_updater(positions, interval_min, interval_max,
                         times, *gaussian_parameters):
     '''It updates the positions list by evaluating the brownian formula given
     before this function.
-    It accepts positions and times both as lists of floats, and 
-    then gaussian parameters as a tuple, so that the user may decide
-    if to give mu, sigma as floats and the rng seed as integer or
-    just mu and sigma without giving the seed.
+    Parameters:
     '''
-    if len(times) == 0:
+    if times is None:
         return
     if positions[0] < interval_min or positions[0] > interval_max:
         raise ValueError('The starting point is out of bounds.')
 
-    previous_time = times[0]
-    for time in times[1:]:
-        dt = time - previous_time
+    for i in range(1, len(times)):
+        dt = times[i] - times[i-1]
         gaussian_term = gaussian_distribution(*gaussian_parameters)
-        previous_point = positions[-1]
+        previous_point = positions[i-1]
         new_point = brownian_formula(previous_point, dt, gaussian_term)
 
         if new_point < interval_min:
@@ -114,8 +103,11 @@ def space_state_updater(positions, interval_min, interval_max,
             reflected_position = interval_max - gap
             new_point = reflected_position
 
-        positions.append(new_point)
-        previous_time = time
+        positions[i] = new_point
+
+
+#def velocity_1d(space_state, time_state):
+#    return (np.gradient(space_state) / np.gradient(time_state))
 
 
 def run_simulation():
@@ -127,12 +119,12 @@ def run_simulation():
     n_points = 1000
 
     # initializing the states
-    times = init_time_state(t_0)
-    x_coordinates = init_space_state(x_0)
-    y_coordinates = init_space_state(y_0)
+    times = init_time_state(t_0, n_points)
+    x_coordinates = init_space_state(x_0, len(times))
+    y_coordinates = init_space_state(y_0, len(times))
 
     # updating the states
-    time_state_updater(times, n_points, exponential_distribution, beta)
+    time_state_updater(times, exponential_distribution, beta)
     space_state_updater(x_coordinates, x_min, x_max, times, mu, sigma)
     space_state_updater(y_coordinates, y_min, y_max, times, mu, sigma)
 
@@ -141,9 +133,9 @@ def run_simulation():
     ax1.plot(times, x_coordinates, label='x coordinate', color='orange')
     ax1.plot(times, y_coordinates, label='y coordinate', color='cyan')
     ax1.hlines([x_min, x_max], times[0], times[-1],
-                label='x boundaries', color='orange', linestyle='dashed')
+                label='x boundaries', color='orange', linestyle='dotted')
     ax1.hlines([y_min, y_max],  times[0], times[-1],
-                label='y boundaries', color='cyan', linestyle='dashed')
+                label='y boundaries', color='cyan', linestyle='dotted')
     ax1.legend(loc='best')
     ax1.set_xlabel('Time')
     ax1.set_ylabel('Space')
@@ -155,8 +147,8 @@ def run_simulation():
     ax2.plot(x_0, y_0, label='origin',
              color='red', marker='o', linestyle='None')
     boundaries = Rectangle((x_min, y_min), x_max - x_min,
-                            y_max - y_min, facecolor='None', edgecolor='red',
-                            linestyle='dashed', label='boundaries')
+                           y_max - y_min, facecolor='None', edgecolor='red',
+                           linestyle='dashed', label='boundaries')
     ax2.add_patch(boundaries)
     ax2.legend(loc='best')
     ax2.set_xlabel("x")
