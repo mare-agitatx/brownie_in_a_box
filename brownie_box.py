@@ -5,8 +5,9 @@ from matplotlib.patches import Rectangle
 
 def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
     '''The most simple formula to implement Brownian motion.
-        Parameters:
-        Returns:
+    Parameters:
+    Returns:
+    Raises:
     '''
     if dt < 0.:
         raise ValueError('Given a negative time gap to dt.')
@@ -17,8 +18,8 @@ def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
 
 def gaussian_distribution(mu, sigma, seed=None):
     '''It computes a gaussian distribution's value.
-        Parameters:
-        Returns:
+    Parameters:
+    Returns:
     '''
     if seed is None:
         output = np.random.normal(mu, sigma)
@@ -31,8 +32,8 @@ def gaussian_distribution(mu, sigma, seed=None):
 
 def exponential_distribution(beta, seed=None):
     '''It computes an exponential distribution's value.
-        Parameters:
-        Returns:
+    Parameters:
+    Returns:
     '''
     if seed is None:
         output = np.random.exponential(beta)
@@ -45,8 +46,8 @@ def exponential_distribution(beta, seed=None):
 
 def init_time_state(initial_time=None, n_points=None):
     '''Something something.
-        Parameters:
-        Returns:
+    Parameters:
+    Returns:
     '''
     if initial_time is None or n_points is None:
         return None
@@ -58,7 +59,7 @@ def init_time_state(initial_time=None, n_points=None):
 def time_state_updater(time_array, time_distribution, *time_parameters):
     '''It updates the time array by evaluating the distribution given
     as an input n_points - 1 times.
-        Parameters:
+    Parameters:
     '''
     for i in range(1, len(time_array)):
         time_array[i] = time_array[i-1] + time_distribution(*time_parameters)
@@ -66,8 +67,8 @@ def time_state_updater(time_array, time_distribution, *time_parameters):
 
 def init_space_state(initial_position=None, n_points=None):
     '''Something something.
-        Parameters:
-        Returns:
+    Parameters:
+    Returns:
     '''
     if initial_position is None or n_points is None:
         return None
@@ -110,25 +111,23 @@ def space_state_updater(positions, interval_min, interval_max,
 #    return (np.gradient(space_state) / np.gradient(time_state))
 
 
-def run_simulation():
-    # initializing the parameters
-    mu, sigma, beta = 0.0, 1.0, 1.0
-    x_min, x_max = 0.0, 20.0
-    y_min, y_max = -12.0, 12.0
-    x_0, y_0, t_0 = 5.0, 2.0, 0.0
-    n_points = 1000
-
-    # initializing the states
+def initialize_states(n_points, t_0, x_0, y_0):
     times = init_time_state(t_0, n_points)
     x_coordinates = init_space_state(x_0, len(times))
     y_coordinates = init_space_state(y_0, len(times))
 
-    # updating the states
+    return times, x_coordinates, y_coordinates
+
+
+def update_states(times, x_coordinates, y_coordinates, x_min, x_max, 
+                   y_min, y_max, mu, sigma, beta):
     time_state_updater(times, exponential_distribution, beta)
     space_state_updater(x_coordinates, x_min, x_max, times, mu, sigma)
     space_state_updater(y_coordinates, y_min, y_max, times, mu, sigma)
 
-    # plotting x and y over t, to see their time evolution
+
+def display_plots(times, x_coordinates, y_coordinates,
+                  x_min, x_max, y_min, y_max):
     fig1, ax1 = plt.subplots()
     ax1.plot(times, x_coordinates, label='x coordinate', color='orange')
     ax1.plot(times, y_coordinates, label='y coordinate', color='cyan')
@@ -160,4 +159,16 @@ def run_simulation():
 
 ###############################################################################
 if __name__ == "__main__":
-    run_simulation()
+    # parameters for state init
+    n_points, t_0 = 1000, 0.0
+    x_0, y_0 = 5.0, 2.0
+    times, x_coordinates, y_coordinates = initialize_states(n_points,
+                                                            t_0, x_0, y_0)
+    # parameters for simulation and plotting
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -12.0, 12.0
+    mu, sigma, beta = 0.0, 1.0, 1.0
+    update_states(times, x_coordinates, y_coordinates,
+                  x_min, x_max, y_min, y_max, mu, sigma, beta)
+    display_plots(times, x_coordinates, y_coordinates,
+                  x_min, x_max, y_min, y_max)
