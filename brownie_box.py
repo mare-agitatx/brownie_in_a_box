@@ -102,25 +102,15 @@ def space_state_updater(positions, interval_min, interval_max,
         previous_time = time
 
 
-def run_simulation():
-    # initializing the parameters
-    mu, sigma, beta = 0.0, 1.0, 1.0
-    x_min, x_max = 0.0, 20.0
-    y_min, y_max = -12.0, 12.0
-    x_0, y_0, t_0 = 5.0, 2.0, 0.0
-    n_points = 1000
-
-    # initializing the states
-    times = init_time_state(t_0)
-    x_coordinates = init_space_state(x_0)
-    y_coordinates = init_space_state(y_0)
-
-    # updating the states
+def run_simulation(times, x_coordinates, y_coordinates,
+                   mu, sigma, beta, x_0, y_0, t_0, n_points,
+                   x_min, x_max, y_min, y_max):
     time_state_updater(times, n_points, exponential_distribution, beta)
     space_state_updater(x_coordinates, x_min, x_max, times, mu, sigma)
     space_state_updater(y_coordinates, y_min, y_max, times, mu, sigma)
 
 
+def plots(times, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
     # plotting x and y over t, to see their time evolution
     fig1, ax1 = plt.subplots()
     ax1.plot(times, x_coordinates, label='x coordinate', color='orange')
@@ -153,4 +143,22 @@ def run_simulation():
 
 ###############################################################################
 if __name__ == "__main__":
-    run_simulation()
+    # initializing the parameters
+    mu, sigma, beta = 0.0, 1.0, 1.0
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -12.0, 12.0
+    x_0, y_0, t_0 = 5.0, 2.0, 0.0
+    n_points = 1000
+
+    # initializing the states
+    times = init_time_state(t_0)
+    x_coordinates = init_space_state(x_0)
+    y_coordinates = init_space_state(y_0)
+
+    run_simulation(times, x_coordinates, y_coordinates,
+                   mu, sigma, beta, x_0, y_0, t_0, n_points,
+                   x_min, x_max, y_min, y_max)
+    plots(times, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max)
+
+
+
