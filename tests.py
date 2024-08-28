@@ -3,6 +3,8 @@ import pytest
 
 
 def test_brownian_formula_1():
+    '''
+    '''
     dt = 2.0
     gaussian = 0.5
     previous_point = 3.0
@@ -13,6 +15,8 @@ def test_brownian_formula_1():
 
 
 def test_brownian_formula_2():
+    '''
+    '''
     dt = 0.0
     gaussian = 0.0
     previous_point = 0.0
@@ -23,160 +27,150 @@ def test_brownian_formula_2():
 
 
 def test_brownian_formula_3():
+    '''
+    '''
     with pytest.raises(ValueError):
         dt = -1.0
         brownian_formula(1.0, dt, 1.0)
 
 
 def test_gaussian_distribution_1():
+    '''
+    '''
     rng = np.random.default_rng(42)
     mu, sigma = 0.0, 1.0
+    expected = [rng.normal(mu, sigma), rng.normal(mu, sigma)]
 
-    expected = rng.normal(mu, sigma)
-    observed = gaussian_distribution(0.0, 1.0, 42)
-    assert observed == pytest.approx(expected)
+    # the seed must be set again or the next calls
+    # to the distribution will proceed with the
+    # following pseudo-random numbers in the sequence,
+    # while we want to check that the same distribution
+    # values are drawn from the same pseudo-random numbers
+    rng = np.random.default_rng(42)
+    observed = [gaussian_distribution(0.0, 1.0, rng),
+                gaussian_distribution(0.0, 1.0, rng)]
+    for i in range(len(expected)):
+        assert observed[i] == pytest.approx(expected[i])
 
 
 def test_gaussian_distribution_2():
+    '''
+    '''
     mu = 2.0
     observed = gaussian_distribution(mu, 0.0)
     assert observed == pytest.approx(mu)
 
 
 def test_exponential_distribution_1():
+    '''
+    '''
     rng = np.random.default_rng(69)
     beta = 1.0
+    expected = [rng.exponential(beta), rng.exponential(beta)]
 
-    expected = rng.exponential(beta)
-    observed = exponential_distribution(1.0, 69)
-    assert observed == pytest.approx(expected)
+    # the seed must be set again or the next calls
+    # to the distribution will proceed with the
+    # following pseudo-random numbers in the sequence,
+    # while we want to check that the same distribution
+    # values are drawn from the same pseudo-random numbers
+    rng = np.random.default_rng(69)
+    observed = [exponential_distribution(beta, rng),
+                exponential_distribution(beta, rng)]
+    assert observed == expected
 
 
 def test_exponential_distribution_2():
+    '''
+    '''
     beta = 0.0
 
     observed = exponential_distribution(0.0)
     assert observed == pytest.approx(0.0)
 
 
-def test_init_time_state_1():
-    empty_time_state = init_space_state()
-    assert empty_time_state is None
-
-
-def test_init_time_state_2():
-    time_state = init_time_state(1.0)
-    assert len(time_state) == 1
-
-
-def test_init_time_state_3():
-    time_state = init_time_state(3.0)
-    assert time_state == [3.0]
-
-
-def test_time_state_updater_1():
-    observed_times = [0.0]
-    distribution = exponential_distribution
-    parameters = [1.0]
-    time_state_updater(observed_times, 10, distribution, *parameters)
-    previous_time = observed_times[0]
-
-    for time in observed_times[1:]:
-        assert time >= previous_time
-        previous_time = time
-
-
-def test_time_state_updater_2():
-    observed_times = [0.0]
-    n_points = 10
-    time_state_updater(observed_times, n_points, exponential_distribution, 1.0)
-
-    assert len(observed_times) == n_points
-
-
-def test_init_space_state_1():
-    empty_space_state = init_space_state()
-    assert empty_space_state is None
-
-
-def test_init_space_state_2():
-    space_state = init_space_state(1.0)
-    assert len(space_state) == 1
-
-
-def test_init_space_state_3():
-    space_state = init_space_state(3.0)
-    assert space_state == [3.0]
-
-
 def test_space_state_updater_1():
-    empty_time_state = []
-    space_list = [0.1]
-    initial_space_list = space_list
-    space_state_updater(space_list, 0.0, 1.0, empty_time_state, 0.0, 1.0)
+    '''
+    '''
+    point = 0.1
+    initial_point = point
+    dt = 0.0
+    space_state_updater(point, 0.0, 1.0, dt, 0.0, 1.0)
 
-    assert space_list == initial_space_list
+    assert point == pytest.approx(initial_point)
 
 
 def test_space_state_updater_2():
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    gaussian_parameters = (0.0, 1.0, 50)
+    '''
+    '''
+    n_repetitions = 100
+    dt = 2.0
+    gaussian_parameters = (0.0, 1.0)
+    s_min, s_max = 0.0, 10.0
 
-    space_state = [0.1]
-    s_min, s_max = 0.0, 1.0
-    space_state_updater(space_state, s_min, s_max,
-                        time_state, *gaussian_parameters)
+    observed = 0.5
+    for i in range(n_repetitions):
+        observed = space_state_updater(observed, s_min, s_max,
+                                       dt, *gaussian_parameters)
 
-    assert len(space_state) == len(time_state)
+    assert observed >= s_min
+    assert observed <= s_max
 
 
 def test_space_state_updater_3():
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    seed = None
-    gaussian_parameters = (0.0, 1.0, seed)
-    s_min, s_max = 0.0, 1.0
-
-    observed = [0.1]
-    space_state_updater(observed, s_min, s_max,
-                        time_state, *gaussian_parameters)
-
-    out_of_bounds_counter = 0
-    expected = [0.1]
-    for time in time_state[1:]:
-        gaussian = gaussian_distribution(*gaussian_parameters)
-        new_point = brownian_formula(expected[-1], 1.0, gaussian)
-        expected.append(new_point)
-        if new_point < s_min or new_point > s_max:
-            out_of_bounds_counter += 1
-
-    if out_of_bounds_counter == 0:
-        assert observed == expected
-    else:
-        assert observed != expected
-
-
-def test_space_state_updater_4():
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    seed = None
-    gaussian_parameters = (0.0, 1.0, seed)
-    s_min, s_max = 0.0, 10.0
-
-    observed = [0.1]
-    space_state_updater(observed, s_min, s_max,
-                        time_state, *gaussian_parameters)
-
-    assert min(observed) >= s_min
-    assert max(observed) <= s_max
-
-
-def test_space_state_updater_5():
-    out_of_bounds_origin = 500.0
-    time_state = [1.0, 2.0, 3.0, 4.0, 5.0]
-    seed = None
-    gaussian_parameters = (0.0, 1.0, seed)
+    '''
+    '''
+    dt = 2.0
+    gaussian_parameters = (0.0, 1.0)
     s_min, s_max = 0.0, 10.0
 
     with pytest.raises(ValueError):
-        observed = [out_of_bounds_origin]
-        space_state_updater(observed, s_min, s_max,
-                            time_state, *gaussian_parameters)
+        out_of_bounds_origin = 500.0
+        observed = space_state_updater(out_of_bounds_origin,
+                                       s_min, s_max, dt, *gaussian_parameters)
+
+
+def test_draw_random_event_1():
+    '''
+    '''
+    rates = [0.1, 0.1, 0.1]
+    transitions_names = ['event1', 'event2', 'event3']
+    event = draw_random_event(transitions_names, rates)
+    assert event in transitions_names
+
+
+def test_draw_random_event_2():
+    '''
+    '''
+    rates = [0.1, 0.1]
+    transitions_names = ['event1', 'event2', 'event3', 'event4']
+    with pytest.raises(ValueError):
+        event = draw_random_event(transitions_names, rates)
+
+
+def test_run_simulation_1():
+    '''
+    '''
+    t_0, time_limit = 30.0, 30.0
+    x_0, y_0 = 0.0, 0.0
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -10.0, 10.0
+    result = run_simulation(x_0, y_0, x_min, x_max,
+                   y_min, y_max, t_0, time_limit)
+
+    assert result == []
+
+
+def test_run_simulation_2():
+    '''
+    '''
+    t_0, time_limit = 0.0, 30.0
+    x_0, y_0 = 0.0, 0.0
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -10.0, 10.0
+    seed = 420
+    result_1 = run_simulation(x_0, y_0, x_min, x_max,
+                              y_min, y_max, t_0, time_limit, seed)
+    result_2 = run_simulation(x_0, y_0, x_min, x_max,
+                              y_min, y_max, t_0, time_limit, seed)
+
+    assert result_1 == result_2
