@@ -23,9 +23,12 @@ git clone https://github.com/mare-agitatx/brownie_in_a_box.git
 ```
 
 By doing so in the local folder a new folder is created with the code and
-the .git repo files. Then run the script brownie_box.py with python for the
-simulation  or tests.py with pytest to test it; this is achieved with the 
-commands:
+the .git repo files
+
+## Usage
+
+To run the simulation, run the script brownie_box.py with python. To run the
+test suite, run tests.py with pytest; this is achieved with the commands:
 
 ```
 python brownie_in_a_box.py
