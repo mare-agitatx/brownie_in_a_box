@@ -10,7 +10,7 @@ As of now, the documentation and the code itself are a WORK IN PROGRESS
 
 ## Dependencies
 
-numpy, matplotlib for brownie_box.py
+numpy, matplotlib, typing, enum for brownie_box.py
 
 everything listed for brownie_box.py and pytest for tests.py
 
