@@ -8,8 +8,20 @@ from enum import Enum
 def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
     '''A simple formula to implement Brownian motion.
     Parameters:
+        point_at_t_minus_one: float, previous position to update
+        dt: float, time interval of the movement
+        gaussian_term: float, gaussian value computed elsewhere; in order
+        to have brownian motion the mean must be 0.0 and the variance
+        deviation must be equal to dt. It can be shown that this is 
+        equivalent to computing a gaussian with mean 0.0 and 
+        standard deviation 1.0 and then multiplying it by sqrt(dt),
+        which this formula does.
+        IT IS IMPORTANT THAT THE GAUSSIAN TERM IS THEN A GAUSSIAN
+        WITH MEAN 0.0 AND STANDARD DEVIATION 1.0
     Returns:
+        point_at_t: float, the new position computed
     Raises:
+        ValueError: if dt is negative
     '''
     if dt < 0.:
         raise ValueError('Given a negative time gap to dt.')
@@ -21,20 +33,30 @@ def brownian_formula(point_at_t_minus_one, dt, gaussian_term):
 def gaussian_distribution(mu, sigma, rng=None):
     '''It computes a gaussian distribution's value.
     Parameters:
+        mu: float, the gaussian average parameter
+        sigma: float, the gaussian standard deviation parameter
+        rng: numpy.random.Generator, the generator of random numbers if passed
+             as input, defaults at None if it isn't passed
     Returns:
+        output: float, the computed value of the distribution
     '''
     if rng is None:
-        gaussian = np.random.normal
+        output = np.random.normal(mu, sigma)
     else:
         random_number_generator = rng
-        gaussian = random_number_generator.normal
+        output = random_number_generator.normal(mu, sigma)
 
-    return gaussian(mu, sigma)
+    return output
 
 def exponential_distribution(beta, rng=None):
     '''It computes an exponential distribution's value.
     Parameters:
+        beta: float, the beta value of the exponential, equal to
+              1/rate if the distribution is thought as function of rate
+        rng: numpy.random.Generator, the generator of random numbers if passed
+             as input, defaults at None if it isn't passed
     Returns:
+        output: float, the computed value of the distribution
     '''
     if rng is None:
         output = np.random.exponential(beta)
@@ -47,9 +69,16 @@ def exponential_distribution(beta, rng=None):
 
 def space_state_updater(point_to_update, interval_min, interval_max,
                         dt, *gaussian_parameters):
-    '''Something something.
+    '''Updater function to compute the next position for the bacterium in the
+       simulation
     Parameters:
+        point_to_update:
+        interval_min:
+        interval_max:
+        dt:
+        *gaussian_parameters:
     Returns:
+        new_point:
     '''
     if point_to_update < interval_min or point_to_update > interval_max:
         raise ValueError('The given point is out of bounds.')
@@ -85,18 +114,32 @@ class Bacterium(typing.NamedTuple):
 
 
 def death():
+    '''Probability for the death event.
+    Returns: float, probability value.
+    '''
     return 0.005
 
 
 def reproduction():
+    '''Probability for the reproduction event.
+    Returns: float, probability value.
+    '''
     return 0.3
 
 
 def movement():
+    '''Probability for the movement event.
+    Returns: float, probability value.
+    '''
     return 1
 
 
 def draw_random_event(transitions_names, rates, rng=None):
+    '''
+    Parameters:
+    Returns:
+    Raises:
+    '''
     if len(transitions_names) != len(rates):
         raise ValueError('Names and rates for the transitions ' +
                          'must be equal in number.')
@@ -115,6 +158,11 @@ def draw_random_event(transitions_names, rates, rng=None):
 
 def run_simulation(x_0, y_0, x_min, x_max,
                    y_min, y_max, t_0, time_limit, seed=None):
+    '''
+    Parameters:
+    Returns:
+    Raises:
+    '''
     transitions = [death, reproduction, movement]
     transitions_names = ['death', 'reproduction', 'movement']
 
@@ -162,6 +210,9 @@ def run_simulation(x_0, y_0, x_min, x_max,
 
 
 def plots(times, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
+    '''
+    Parameters:
+    '''
 
     fig1, ax1 = plt.subplots()
     ax1.set_title('Time evolution of the coordinates')
@@ -187,7 +238,6 @@ def plots(times, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
     ax2.legend(loc='best')
     ax2.set_xlabel("x")
     ax2.set_ylabel("y")
-
 
     plt.show()
 
