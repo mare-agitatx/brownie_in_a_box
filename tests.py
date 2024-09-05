@@ -1,7 +1,10 @@
-from brownie_box import *
+from simulation import *
+from analysis import *
 import pytest
 
 
+##############################################################################
+# tests for simulation.py
 def test_gaussian_distribution_1():
     '''Testing reproducibility of the distribution: to do so some values are
        generated from a seed, the default_rng of numpy and the normal
@@ -240,3 +243,52 @@ def test_run_simulation_2():
                               y_min, y_max, t_0, time_limit, seed)
 
     assert result_1 == result_2
+
+
+def test_date_name_file_1():
+    '''
+    '''
+    result = date_name_file()
+    assert type(result) == str
+
+
+def test_date_name_file_2():
+    '''
+    '''
+    with pytest.raises(TypeError):
+        result = date_name_file(33.3)
+
+
+def test_save_data_json_1(tmp_path):
+    '''
+    '''
+    data = [1, 2, 3, 4]
+    results_folder = str(tmp_path) + '/'
+    save_data_json(data, 'test.json', results_folder)
+
+    filepath = tmp_path / 'test.json'
+    with open(filepath, 'r') as json_file:
+        observed = json.load(json_file)
+        assert observed == data
+
+
+##############################################################################
+# tests for analysis.py
+def test_load_data_json_1(tmp_path):
+    '''
+    '''
+    filepath = tmp_path / 'test.json'
+    data = {'1': 1, '2': 2, '3': 3}
+    with open(filepath, 'a') as json_file:
+        json.dump(data, json_file, indent=4)
+
+    str_path = str(filepath)
+    observed = load_data_json(str_path)
+    assert observed == data
+
+
+def test_parse_data_dictionary_1():
+    '''
+    '''
+    with pytest.raises(ValueError):
+        parse_data_dictionary({})
