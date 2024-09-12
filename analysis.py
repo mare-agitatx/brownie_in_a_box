@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 
-FILEPATH = 'results/2024_09_05_10_16_55.json'
+FILEPATH = 'results/2024_09_09_10_10_35.json'
+BACTERIUM = 13000
 
 
 def load_data_json(filepath):
@@ -20,7 +21,7 @@ def load_data_json(filepath):
     return data
 
 
-def parse_data_dictionary(data_dictionary):
+def parse_data_dictionary(data_dictionary, bact_id_number):
     '''Blah blah.
     Parameters:
         data_dictionary: dictionary containing the data from file.
@@ -33,10 +34,11 @@ def parse_data_dictionary(data_dictionary):
         raise ValueError('The given input dictionary is empty.')
 
     parameters_dict = data_dictionary['parameters']
-    bacterium_dicts = data_dictionary['bacteria']
+    bacteria_list = data_dictionary['bacteria']
 
     t, x, y = [], [], []
-    for state_dict in bacterium_dicts:
+    bacterium = bacteria_list[bact_id_number]
+    for state_dict in bacterium:
         t.append(state_dict['time_of_observation'])
         x.append(state_dict['x'])
         y.append(state_dict['y'])
@@ -86,12 +88,12 @@ def plots(times, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
 
 ###############################################################################
 if __name__ == "__main__":
-    filepath = FILEPATH
     print('Loading the file...')
-    analysis_data = load_data(filepath)
+    analysis_data = load_data_json(FILEPATH)
     print('File loaded.')
     print('Parsing the data...')
-    parameters_dict, bacterium_states = parse_data_dictionary(analysis_data)
+    parameters_dict, bacterium_states = parse_data_dictionary(analysis_data,
+                                                              BACTERIUM)
     x_min = parameters_dict['x_min']
     x_max = parameters_dict['x_max']
     y_min = parameters_dict['y_min']

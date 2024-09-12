@@ -43,9 +43,9 @@ def test_gaussian_distribution_2():
 
 def test_exponential_distribution_1():
     '''Testing reproducibility of the distribution: to do so some values are
-       generated from a seed, the default_rng of numpy and the normal 
+       generated from a seed, the default_rng of numpy and the normal
        distribution are then called with that default generator.
-       Then the rng is reset and the distribution to be tested is called with 
+       Then the rng is reset and the distribution to be tested is called with
        that rng to check that the generated values are the same of those
        generated with the standard method.
     '''
@@ -212,18 +212,46 @@ def test_draw_random_event_2():
         event = draw_random_event(transitions_names, rates)
 
 
+def test_is_float_strictly_lesser_1():
+    '''Testing that value_1 is less than value_2 as expected, and the
+       function recognizes it.
+    '''
+    value_1 = 5.0
+    value_2 = 10.0
+    assert is_float_strictly_lesser(value_1, value_2) is True
+
+
+def test_is_float_strictly_lesser_2():
+    '''Testing that value_2 is more than value_1 as expected, and the
+       function recognizes it.
+    '''
+    value_1 = 5.0
+    value_2 = 10.0
+    assert is_float_strictly_lesser(value_2, value_1) is False
+
+
+def test_is_float_strictly_lesser_3():
+    '''Testing that the value is not strictly less than itself, and
+       the function recognizes it.
+    '''
+    value = 10.0
+    assert is_float_strictly_lesser(value, value) is False
+
+
 def test_run_simulation_1():
     '''Testing that, by giving an initial time already at the time limit value,
-       the simulation returns an empty list of states.
+       the simulation returns a list with only the same number of bacteria
+       initialized from the start.
     '''
     t_0, time_limit = 30.0, 30.0
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
+    start_bacteria = 2
     result = run_simulation(x_0, y_0, x_min, x_max,
-                   y_min, y_max, t_0, time_limit)
+                   y_min, y_max, t_0, time_limit, start_bacteria)
 
-    assert result == []
+    assert len(result) == start_bacteria
 
 
 def test_run_simulation_2():
@@ -232,28 +260,31 @@ def test_run_simulation_2():
        simulation is called two times with the same inputs and stored in two
        different lists. The test checks that the lists have the same elements.
     '''
-    t_0, time_limit = 0.0, 30.0
+    t_0, time_limit = 0.0, 10.0
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
-    seed = 420
+    start_bacteria, seed = 2, 420
     result_1 = run_simulation(x_0, y_0, x_min, x_max,
-                              y_min, y_max, t_0, time_limit, seed)
+                              y_min, y_max, t_0, time_limit,
+                              start_bacteria, seed)
     result_2 = run_simulation(x_0, y_0, x_min, x_max,
-                              y_min, y_max, t_0, time_limit, seed)
+                              y_min, y_max, t_0, time_limit,
+                              start_bacteria, seed)
 
     assert result_1 == result_2
 
 
 def test_date_name_file_1():
-    '''
+    '''Testing that the result is effectively a string.
     '''
     result = date_name_file()
     assert type(result) == str
 
 
 def test_date_name_file_2():
-    '''
+    '''Testing that the function will raise a TypeError if an extension
+       that isn't a string is passed.
     '''
     with pytest.raises(TypeError):
         result = date_name_file(33.3)
@@ -291,4 +322,4 @@ def test_parse_data_dictionary_1():
     '''
     '''
     with pytest.raises(ValueError):
-        parse_data_dictionary({})
+        parse_data_dictionary({}, 1)
