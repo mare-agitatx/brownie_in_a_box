@@ -247,9 +247,11 @@ def test_run_simulation_1():
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
+    death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
     start_bacteria = 2
     result = run_simulation(x_0, y_0, x_min, x_max,
-                   y_min, y_max, t_0, time_limit, start_bacteria)
+                            y_min, y_max, t_0, time_limit, death_coeff,
+                            reprod_coeff, move_coeff, start_bacteria)
 
     assert len(result) == start_bacteria
 
@@ -264,12 +266,15 @@ def test_run_simulation_2():
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
+    death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
     start_bacteria, seed = 2, 420
     result_1 = run_simulation(x_0, y_0, x_min, x_max,
                               y_min, y_max, t_0, time_limit,
+                              death_coeff, reprod_coeff, move_coeff,
                               start_bacteria, seed)
     result_2 = run_simulation(x_0, y_0, x_min, x_max,
                               y_min, y_max, t_0, time_limit,
+                              death_coeff, reprod_coeff, move_coeff,
                               start_bacteria, seed)
 
     assert result_1 == result_2

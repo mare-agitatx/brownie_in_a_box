@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 
-FILEPATH = 'results/2024_09_09_10_10_35.json'
-BACTERIUM = 13000
+FILEPATH = 'results/2024_09_12_11_50_00.json'
+BACTERIUM = 5
 
 
 def load_data_json(filepath):

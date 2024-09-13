@@ -109,25 +109,25 @@ class Event(Enum):
     BIRTH = 'birth'
 
 
-def death():
+def death(death_coefficient):
     '''Probability for the death event.
     Returns: float, probability value.
     '''
-    return 0.1
+    return death_coefficient
 
 
-def reproduction():
+def reproduction(reproduction_coefficient):
     '''Probability for the reproduction event.
     Returns: float, probability value.
     '''
-    return 0.2
+    return reproduction_coefficient
 
 
-def movement():
+def movement(reproduction_coefficient):
     '''Probability for the movement event.
     Returns: float, probability value.
     '''
-    return 1
+    return reproduction_coefficient
 
 
 def draw_random_event(transition_names, transition_rates, rng=None):
@@ -172,6 +172,8 @@ def is_float_strictly_lesser(value, threshold):
 
 def run_simulation(x_0, y_0, x_min, x_max,
                    y_min, y_max, t_0, time_limit,
+                   death_coefficient, reproduction_coefficient,
+                   movement_coefficient,
                    initial_bacteria_number, seed=None):
     '''The function that runs the main simulation of the bacteria.
     Parameters:
@@ -194,7 +196,6 @@ def run_simulation(x_0, y_0, x_min, x_max,
     # initializing some variables
     active_bacteria_counter = initial_bacteria_number
     dead_bacteria_counter = 0
-    transitions = (death, reproduction, movement)
     transition_names = ('death', 'reproduction', 'movement')
     bacteria = []
     if seed is not None:
@@ -204,7 +205,9 @@ def run_simulation(x_0, y_0, x_min, x_max,
 
     # initialize bacteria as list of lists of states
     for index in range(initial_bacteria_number):
-        rates = [f() for f in transitions]
+        rates = (death(death_coefficient),
+                 reproduction(reproduction_coefficient),
+                 movement(movement_coefficient))
         total_rate = sum(rates)
         dt = exponential_distribution(1/total_rate, rng)
         bacterium_state = {'time_of_observation': t_0,
@@ -227,7 +230,9 @@ def run_simulation(x_0, y_0, x_min, x_max,
                 continue
 
             # computing new interval of residency
-            rates = [f() for f in transitions]
+            rates = (death(death_coefficient),
+                                reproduction(reproduction_coefficient),
+                                movement(movement_coefficient))
             total_rate = sum(rates)
             dt = exponential_distribution(1/total_rate, rng)
 
@@ -345,16 +350,21 @@ def save_data_json(data, filename, results_folder=None):
 ###############################################################################
 if __name__ == "__main__":
     # set the simulation parameters
-    t_0, time_limit = 0.0, 300.0
+    t_0, time_limit = 0.0, 50.0
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
     initial_bacteria_number = 5
+    death_coefficient, reproduction_coefficient = 0.1, 0.1
+    movement_coefficient = 1.0
     seed = 5000000
     parameters_dict = {'t_0': t_0, 'time_limit': time_limit,
                        'x_0': x_0, 'y_0': y_0,
                        'x_min': x_min, 'x_max': x_max,
                        'y_min': y_min, 'y_max': y_max,
+                       'death_coefficient': death_coefficient,
+                       'reproduction_coefficient': reproduction_coefficient,
+                       'movement_coefficient': movement_coefficient,
                        'initial_bacteria_number': initial_bacteria_number,
                        'seed': seed}
     simulation_dict = {'parameters': parameters_dict, 'bacteria': []}
@@ -362,6 +372,8 @@ if __name__ == "__main__":
     print('Starting the simulation...')
     result = run_simulation(x_0, y_0, x_min, x_max,
                             y_min, y_max, t_0, time_limit,
+                            death_coefficient, reproduction_coefficient,
+                            movement_coefficient,
                             initial_bacteria_number, seed)
     print('Simulation done.\nBacteria simulated =', len(result))
     print('Saving the result...')
