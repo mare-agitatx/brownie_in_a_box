@@ -6,12 +6,13 @@ import pytest
 ##############################################################################
 # tests for simulation.py
 def test_gaussian_distribution_1():
-    '''Testing reproducibility of the distribution: to do so some values are
-       generated from a seed, the default_rng of numpy and the normal
-       distribution are then called with that default generator.
-       Then the rng is reset and the distribution to be tested is called with
-       that rng to check that the generated values are the same of those
-       generated with the standard method.
+    '''
+    Testing reproducibility of the distribution: to do so, some values are
+    generated from a seed, the default_rng of numpy and the normal
+    distribution are then called with that default generator.
+    Then the rng is reset and the distribution to be tested is called with
+    that rng to check that the generated values are the same of those
+    generated with the standard method.
     '''
     rng = np.random.default_rng(42)
     mu, sigma = 0.0, 1.0
@@ -33,8 +34,9 @@ def test_gaussian_distribution_1():
 
 
 def test_gaussian_distribution_2():
-    '''Testing that, with a 0.0 standard deviation, the gaussian gives back
-       the mu value as output.
+    '''
+    Testing that, with a 0.0 standard deviation, the gaussian gives back
+    the mu value as output.
     '''
     mu = 2.0
     observed = gaussian_distribution(mu, 0.0)
@@ -42,12 +44,13 @@ def test_gaussian_distribution_2():
 
 
 def test_exponential_distribution_1():
-    '''Testing reproducibility of the distribution: to do so some values are
-       generated from a seed, the default_rng of numpy and the normal
-       distribution are then called with that default generator.
-       Then the rng is reset and the distribution to be tested is called with
-       that rng to check that the generated values are the same of those
-       generated with the standard method.
+    '''
+    Testing reproducibility of the distribution: to do so, some values are
+    generated from a seed, the default_rng of numpy and the normal
+    distribution are then called with that default generator.
+    Then the rng is reset and the distribution to be tested is called with
+    that rng to check that the generated values are the same of those
+    generated with the standard method.
     '''
     rng = np.random.default_rng(69)
     beta = 1.0
@@ -68,8 +71,9 @@ def test_exponential_distribution_1():
 
 
 def test_exponential_distribution_2():
-    '''Testing that, with a 0.0 beta value (which is like an infinite rate
-       value, since beta = 1/rate), the exponential distribution gives back 0.0.
+    '''
+    Testing that, with a 0.0 beta value (which is like an infinite rate
+    value, since beta = 1/rate), the exponential distribution gives back 0.0.
     '''
     beta = 0.0
 
@@ -78,8 +82,9 @@ def test_exponential_distribution_2():
 
 
 def test_brownian_formula_1():
-    '''Testing that the formula gives the expected value with the same values
-       computed in another way.
+    '''
+    Testing that the formula gives the expected value with the same values
+    computed in another way.
     '''
     dt = 2.0
     seed = 20
@@ -99,8 +104,9 @@ def test_brownian_formula_1():
 
 
 def test_brownian_formula_2():
-    '''Testing that by giving a zero time interval dt then the point will
-       retain the old position.
+    '''
+    Testing that by giving a zero time interval dt then the point will
+    retain the old position.
     '''
     dt = 0.0
     previous_point = 1.0
@@ -110,8 +116,9 @@ def test_brownian_formula_2():
 
 
 def test_brownian_formula_3():
-    '''Testing that, by giving a negative time interval dt, brownian_formula()
-       raises a ValueError.
+    '''
+    Testing that, by giving a negative time interval dt, brownian_formula()
+    raises a ValueError.
     '''
     with pytest.raises(ValueError):
         dt = -1.0
@@ -119,9 +126,10 @@ def test_brownian_formula_3():
 
 
 def test_brownian_formula_4():
-    '''Testing that the function has proper replicability by calling it
-       multiple times and then doing it again with the rng reset and
-       comparing the results stored in different lists.
+    '''
+    Testing that the function has proper replicability by calling it
+    multiple times and then doing it again with the rng reset, and then
+    comparing the results stored in different lists.
     '''
     n_repetitions = 100
     list1, list2 = [], []
@@ -150,8 +158,9 @@ def test_brownian_formula_4():
 
 
 def test_space_state_updater_1():
-    '''Testing that, with a zero time interval dt, the space updater leaves the
-       point unchanged.
+    '''
+    Testing that, with a zero time interval dt, the space updater leaves the
+    point unchanged.
     '''
     point = 0.1
     initial_point = point
@@ -161,8 +170,9 @@ def test_space_state_updater_1():
 
 
 def test_space_state_updater_2():
-    '''Testing that no matter how many times the space updater is called, the
-       final position will always be between the interval boundaries.
+    '''
+    Testing that no matter how many times the space updater is called, the
+    final position will always be between the interval boundaries.
     '''
     n_repetitions = 100
     dt = 2.0
@@ -179,8 +189,9 @@ def test_space_state_updater_2():
 
 
 def test_space_state_updater_3():
-    '''Testing that, with an origin that is out of bounds, the space updater
-       raises a ValueError.
+    '''
+    Testing that, with an origin that is out of bounds, the space updater
+    raises a ValueError.
     '''
     dt = 2.0
     gaussian_parameters = (0.0, 1.0)
@@ -193,8 +204,9 @@ def test_space_state_updater_3():
 
 
 def test_draw_random_event_1():
-    '''Testing that the event generated by this function is always one of the
-       given transition names.
+    '''
+    Testing that the event generated by this function is always one of the
+    given transition names.
     '''
     rates = [0.1, 0.1, 0.1]
     transitions_names = ['event1', 'event2', 'event3']
@@ -203,8 +215,9 @@ def test_draw_random_event_1():
 
 
 def test_draw_random_event_2():
-    '''Testing that, by passing a different number of rates and events, the
-       function throws a ValueError.
+    '''
+    Testing that, by passing a different number of rates and events, the
+    function throws a ValueError.
     '''
     rates = [0.1, 0.1]
     transitions_names = ['event1', 'event2', 'event3', 'event4']
@@ -213,8 +226,9 @@ def test_draw_random_event_2():
 
 
 def test_is_float_strictly_lesser_1():
-    '''Testing that value_1 is less than value_2 as expected, and the
-       function recognizes it.
+    '''
+    Testing that, if value_1 is less than value_2 as expected, the
+    function recognizes it.
     '''
     value_1 = 5.0
     value_2 = 10.0
@@ -222,8 +236,9 @@ def test_is_float_strictly_lesser_1():
 
 
 def test_is_float_strictly_lesser_2():
-    '''Testing that value_2 is more than value_1 as expected, and the
-       function recognizes it.
+    '''
+    Testing that, if value_2 is more than value_1 as expected, the
+    function recognizes it.
     '''
     value_1 = 5.0
     value_2 = 10.0
@@ -231,65 +246,90 @@ def test_is_float_strictly_lesser_2():
 
 
 def test_is_float_strictly_lesser_3():
-    '''Testing that the value is not strictly less than itself, and
-       the function recognizes it.
+    '''
+    Testing that the value is not strictly less than itself, and
+    the function recognizes it.
     '''
     value = 10.0
     assert is_float_strictly_lesser(value, value) is False
 
 
 def test_run_simulation_1():
-    '''Testing that, by giving an initial time already at the time limit value,
-       the simulation returns a list with only the same number of bacteria
-       initialized from the start.
+    '''
+    Testing that, by giving an initial time already at the time limit value,
+    the simulation returns a list with the same number of bacteria
+    initialized from the start.
     '''
     t_0, time_limit = 30.0, 30.0
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
     death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
-    start_bacteria = 2
-    result = run_simulation(x_0, y_0, x_min, x_max,
+    start_bacteria, bacteria_limit = 2, 1000000
+    bact_list, flag, max_time = run_simulation(x_0, y_0, x_min, x_max,
                             y_min, y_max, t_0, time_limit, death_coeff,
-                            reprod_coeff, move_coeff, start_bacteria)
+                            reprod_coeff, move_coeff,
+                            start_bacteria, bacteria_limit)
 
-    assert len(result) == start_bacteria
+    assert len(bact_list) == start_bacteria
 
 
 def test_run_simulation_2():
-    '''Testing reproducibility of the simulation: a seed is fixed that will be
-       passed to the numpy default_rng inside the simulation body. The
-       simulation is called two times with the same inputs and stored in two
-       different lists. The test checks that the lists have the same elements.
+    '''
+    Testing that, by giving an initial time already at the time limit value,
+    the simulation returns a max time reached that is t_0.
+    '''
+    t_0, time_limit = 30.0, 30.0
+    x_0, y_0 = 0.0, 0.0
+    x_min, x_max = 0.0, 20.0
+    y_min, y_max = -10.0, 10.0
+    death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
+    start_bacteria, bacteria_limit = 2, 1000000
+    bact_list, flag, max_time = run_simulation(x_0, y_0, x_min, x_max,
+                            y_min, y_max, t_0, time_limit, death_coeff,
+                            reprod_coeff, move_coeff,
+                            start_bacteria, bacteria_limit)
+
+    assert max_time == pytest.approx(t_0)
+
+
+def test_run_simulation_3():
+    '''
+    Testing reproducibility of the simulation: a seed is fixed that will be
+    passed to the numpy default_rng inside the simulation body. The
+    simulation is called two times with the same inputs and stored in two
+    different lists. The test checks that the lists have the same elements.
     '''
     t_0, time_limit = 0.0, 10.0
     x_0, y_0 = 0.0, 0.0
     x_min, x_max = 0.0, 20.0
     y_min, y_max = -10.0, 10.0
     death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
-    start_bacteria, seed = 2, 420
+    start_bacteria, bacteria_limit ,seed = 2, 1000000, 420
     result_1 = run_simulation(x_0, y_0, x_min, x_max,
                               y_min, y_max, t_0, time_limit,
                               death_coeff, reprod_coeff, move_coeff,
-                              start_bacteria, seed)
+                              start_bacteria, bacteria_limit, seed)
     result_2 = run_simulation(x_0, y_0, x_min, x_max,
                               y_min, y_max, t_0, time_limit,
                               death_coeff, reprod_coeff, move_coeff,
-                              start_bacteria, seed)
+                              start_bacteria, bacteria_limit, seed)
 
     assert result_1 == result_2
 
 
 def test_date_name_file_1():
-    '''Testing that the result is effectively a string.
+    '''
+    Testing that the name produced by the function is effectively a string.
     '''
     result = date_name_file()
     assert type(result) == str
 
 
 def test_date_name_file_2():
-    '''Testing that the function will raise a TypeError if an extension
-       that isn't a string is passed.
+    '''
+    Testing that the function will raise a TypeError if an extension
+    that isn't a string is passed.
     '''
     with pytest.raises(TypeError):
         result = date_name_file(33.3)
@@ -297,6 +337,11 @@ def test_date_name_file_2():
 
 def test_save_data_json_1(tmp_path):
     '''
+    Testing that the function will properly save a list in .json format, by
+    saving it and then reloading the file to check that the saved list is
+    the same as the original one.
+    tmp_path is employed in this test, a temporary folder system that works
+    under pytest.
     '''
     data = [1, 2, 3, 4]
     results_folder = str(tmp_path) + '/'
@@ -312,6 +357,11 @@ def test_save_data_json_1(tmp_path):
 # tests for analysis.py
 def test_load_data_json_1(tmp_path):
     '''
+    Testing that the function will properly load a dictionary by first
+    saving it and then loading it with the said function and checking that
+    the loaded dictionary is equal to the original one.
+    tmp_path is employed in this test, a temporary folder system that works
+    under pytest.
     '''
     filepath = tmp_path / 'test.json'
     data = {'1': 1, '2': 2, '3': 3}
@@ -323,8 +373,10 @@ def test_load_data_json_1(tmp_path):
     assert observed == data
 
 
-def test_parse_data_dictionary_1():
+def test_parse_data_dict_1():
     '''
+    Testing that with an empty dictionary as input, the parsing function will
+    raise a ValueError.
     '''
     with pytest.raises(ValueError):
-        parse_data_dictionary({}, 1)
+        parse_data_dict({})
