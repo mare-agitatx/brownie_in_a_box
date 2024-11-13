@@ -1,18 +1,21 @@
 [parameters]
 x_0 = 0.0
 y_0 = 0.0
-x_min = 0.0
-x_max = 20.0
-y_min = -10.0
-y_max = 10.0
+z_0 = 0.0
+x_min = -50.0
+y_min = -50.0
+z_min = -50.0
+x_max = 50.0
+y_max = 50.0
+z_max = 50.0
 t_0 = 0.0
 time_limit = 100.0
 death_coefficient = 0.05
 reproduction_coefficient = 0.1
 movement_coefficient = 1.0
-initial_bacteria_number = 5
-bacteria_limit = 1000000
-seed = 67391598366
+initial_bacteria_number = 30
+bacteria_limit = 500000
+seed = 26583644
 
 [folders]
 results_folder = ./results/
