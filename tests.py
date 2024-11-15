@@ -1,10 +1,12 @@
-from simulation import *
-from analysis import *
+import br_simulation as brs
+import br_analysis as bra
 import pytest
+import json
+import numpy as np
 
 
-##############################################################################
-# tests for simulation.py
+################################################################################
+# tests for brownie_simulation.py
 def test_gaussian_distribution_1():
     '''
     Testing reproducibility of the distribution: to do so, some values are
@@ -25,10 +27,10 @@ def test_gaussian_distribution_1():
     # while we want to check that the same distribution
     # values are drawn from the same pseudo-random numbers
     rng = np.random.default_rng(42)
-    observed = [gaussian_distribution(mu, sigma, rng),
-                gaussian_distribution(mu, sigma, rng),
-                gaussian_distribution(mu, sigma, rng),
-                gaussian_distribution(mu, sigma, rng)]
+    observed = [brs.gaussian_distribution(mu, sigma, rng),
+                brs.gaussian_distribution(mu, sigma, rng),
+                brs.gaussian_distribution(mu, sigma, rng),
+                brs.gaussian_distribution(mu, sigma, rng)]
     for i in range(len(expected)):
         assert observed[i] == pytest.approx(expected[i])
 
@@ -39,7 +41,7 @@ def test_gaussian_distribution_2():
     the mu value as output.
     '''
     mu = 2.0
-    observed = gaussian_distribution(mu, 0.0)
+    observed = brs.gaussian_distribution(mu, 0.0)
     assert observed == pytest.approx(mu)
 
 
@@ -63,10 +65,10 @@ def test_exponential_distribution_1():
     # while we want to check that the same distribution
     # values are drawn from the same pseudo-random numbers
     rng = np.random.default_rng(69)
-    observed = [exponential_distribution(beta, rng),
-                exponential_distribution(beta, rng),
-                exponential_distribution(beta, rng),
-                exponential_distribution(beta, rng)]
+    observed = [brs.exponential_distribution(beta, rng),
+                brs.exponential_distribution(beta, rng),
+                brs.exponential_distribution(beta, rng),
+                brs.exponential_distribution(beta, rng)]
     assert observed == expected
 
 
@@ -77,11 +79,38 @@ def test_exponential_distribution_2():
     '''
     beta = 0.0
 
-    observed = exponential_distribution(0.0)
+    observed = brs.exponential_distribution(0.0)
     assert observed == pytest.approx(0.0)
 
 
-def test_brownian_formula_1():
+def test_uniform_distribution_1():
+    '''
+    Testing reproducibility of the distribution: to do so, some values are
+    generated from a seed, the default_rng of numpy and the normal
+    distribution are then called with that default generator.
+    Then the rng is reset and the distribution to be tested is called with
+    that rng to check that the generated values are the same of those
+    generated with the standard method.
+    '''
+    rng = np.random.default_rng(911)
+    min, max = 0.0, 1.0
+    expected = [rng.uniform(min, max), rng.uniform(min, max),
+                rng.uniform(min, max), rng.uniform(min, max)]
+
+    # the rng must be set again or the next calls
+    # to the distribution will proceed with the
+    # following pseudo-random numbers in the sequence,
+    # while we want to check that the same distribution
+    # values are drawn from the same pseudo-random numbers
+    rng = np.random.default_rng(911)
+    observed = [brs.uniform_distribution(min, max, rng),
+                brs.uniform_distribution(min, max, rng),
+                brs.uniform_distribution(min, max, rng),
+                brs.uniform_distribution(min, max, rng)]
+    assert observed == expected
+
+
+def test_brownian_formula_1d_1():
     '''
     Testing that the formula gives the expected value with the same values
     computed in another way.
@@ -89,9 +118,9 @@ def test_brownian_formula_1():
     dt = 2.0
     seed = 20
     rng = np.random.default_rng(seed)
-    gaussian = gaussian_distribution(0.0, 1.0, rng)
+    gaussian = brs.gaussian_distribution(0.0, 1.0, rng)
     previous_point = 3.0
-    expected = 3.0 + gaussian * 1.41421356
+    expected = 3.0 + gaussian * np.sqrt(dt).astype(float)
 
     # the rng must be set again or the next call
     # to the distribution will proceed with the
@@ -99,11 +128,11 @@ def test_brownian_formula_1():
     # while we want to check the formula with the
     # same generated value
     rng = np.random.default_rng(seed)
-    observed = brownian_formula(previous_point, dt, rng)
+    observed = brs.brownian_formula_1d(previous_point, dt, rng)
     assert observed == pytest.approx(expected)
 
 
-def test_brownian_formula_2():
+def test_brownian_formula_1d_2():
     '''
     Testing that by giving a zero time interval dt then the point will
     retain the old position.
@@ -111,21 +140,21 @@ def test_brownian_formula_2():
     dt = 0.0
     previous_point = 1.0
 
-    observed = brownian_formula(previous_point, dt)
+    observed = brs.brownian_formula_1d(previous_point, dt)
     assert observed == pytest.approx(previous_point)
 
 
-def test_brownian_formula_3():
+def test_brownian_formula_1d_3():
     '''
     Testing that, by giving a negative time interval dt, brownian_formula()
     raises a ValueError.
     '''
     with pytest.raises(ValueError):
         dt = -1.0
-        brownian_formula(1.0, dt)
+        brs.brownian_formula_1d(1.0, dt)
 
 
-def test_brownian_formula_4():
+def test_brownian_formula_1d_4():
     '''
     Testing that the function has proper replicability by calling it
     multiple times and then doing it again with the rng reset, and then
@@ -139,7 +168,7 @@ def test_brownian_formula_4():
     rng = np.random.default_rng(seed)
     observed = 0.0
     for index in range(n_repetitions):
-        observed = brownian_formula(observed, dt,  rng)
+        observed = brs.brownian_formula_1d(observed, dt,  rng)
         list1.append(observed)
 
     # the rng must be set again or the next call
@@ -151,28 +180,39 @@ def test_brownian_formula_4():
     # observed must also be reset
     observed = 0.0
     for index in range(n_repetitions):
-        observed = brownian_formula(observed, dt, rng)
+        observed = brs.brownian_formula_1d(observed, dt, rng)
         list2.append(observed)
 
     assert list1 == list2
 
 
-def test_space_state_updater_1():
+def test_is_point_out_of_boundaries_1():
     '''
-    Testing that, with a zero time interval dt, the space updater leaves the
-    point unchanged.
+    Checking that if the point is outside the bounds then the boolean from 
+    the function will be True.
     '''
-    point = 0.1
-    initial_point = point
-    point = space_state_updater(point, 0.0, 1.0, 0.0)
+    point_to_check = 50.0
+    s_min, s_max = 0.0, 1.0
+    result = brs.is_point_out_of_boundaries(point_to_check, s_min, s_max)
+    assert result is True
 
-    assert point == pytest.approx(initial_point)
 
-
-def test_space_state_updater_2():
+def test_is_point_out_of_boundaries_2():
     '''
-    Testing that no matter how many times the space updater is called, the
-    final position will always be between the interval boundaries.
+    Checking that if the point is inside the bounds then the boolean from 
+    the function will be False.
+    '''
+    point_to_check = 0.5
+    s_min, s_max = 0.0, 1.0
+    result = brs.is_point_out_of_boundaries(point_to_check, s_min, s_max)
+    assert result is False
+
+
+def test_enforce_boundaries_1d_1():
+    '''
+    Testing that no matter how many times the brownian formula is called, the
+    final position will always be between the interval boundaries by means of
+    the function that enforces the border.
     '''
     n_repetitions = 100
     dt = 2.0
@@ -181,26 +221,44 @@ def test_space_state_updater_2():
 
     observed = 0.5
     for i in range(n_repetitions):
-        observed = space_state_updater(observed, s_min, s_max,
-                                       dt)
+        observed = brs.brownian_formula_1d(observed, dt)
+        observed = brs.enforce_boundaries_1d(observed, s_min, s_max)
 
-    assert observed >= s_min
-    assert observed <= s_max
+    assert observed > s_min
+    assert observed < s_max
 
 
-def test_space_state_updater_3():
+def test_space_state_updater_1():
+    '''
+    Testing that, with a zero time interval dt, the space updater leaves the
+    point unchanged.
+    '''
+    x, y, z = 0.1, 0.1, 0.1
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
+    x_0, y_0, z_0 = x, y, z
+    dt = 0.0
+    point = brs.space_state_updater(x, y, z, x_min, y_min, z_min,
+                                    x_max, y_max, z_max, dt)
+
+    assert x == pytest.approx(x_0)
+    assert y == pytest.approx(y_0)
+    assert z == pytest.approx(z_0)
+    
+
+def test_space_state_updater_2():
     '''
     Testing that, with an origin that is out of bounds, the space updater
     raises a ValueError.
     '''
     dt = 2.0
-    gaussian_parameters = (0.0, 1.0)
-    s_min, s_max = 0.0, 10.0
+    x, y, z = 300.0, 800.0, 550.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
 
     with pytest.raises(ValueError):
-        out_of_bounds_origin = 500.0
-        observed = space_state_updater(out_of_bounds_origin,
-                                       s_min, s_max, dt)
+        point = brs.space_state_updater(x, y, z, x_min, y_min, z_min,
+                                        x_max, y_max, z_max, dt)
 
 
 def test_draw_random_event_1():
@@ -210,7 +268,7 @@ def test_draw_random_event_1():
     '''
     rates = [0.1, 0.1, 0.1]
     transitions_names = ['event1', 'event2', 'event3']
-    event = draw_random_event(transitions_names, rates)
+    event = brs.draw_random_event(transitions_names, rates)
     assert event in transitions_names
 
 
@@ -222,7 +280,7 @@ def test_draw_random_event_2():
     rates = [0.1, 0.1]
     transitions_names = ['event1', 'event2', 'event3', 'event4']
     with pytest.raises(ValueError):
-        event = draw_random_event(transitions_names, rates)
+        event = brs.draw_random_event(transitions_names, rates)
 
 
 def test_is_float_strictly_lesser_1():
@@ -232,7 +290,7 @@ def test_is_float_strictly_lesser_1():
     '''
     value_1 = 5.0
     value_2 = 10.0
-    assert is_float_strictly_lesser(value_1, value_2) is True
+    assert brs.is_float_strictly_lesser(value_1, value_2) is True
 
 
 def test_is_float_strictly_lesser_2():
@@ -242,7 +300,7 @@ def test_is_float_strictly_lesser_2():
     '''
     value_1 = 5.0
     value_2 = 10.0
-    assert is_float_strictly_lesser(value_2, value_1) is False
+    assert brs.is_float_strictly_lesser(value_2, value_1) is False
 
 
 def test_is_float_strictly_lesser_3():
@@ -251,7 +309,7 @@ def test_is_float_strictly_lesser_3():
     the function recognizes it.
     '''
     value = 10.0
-    assert is_float_strictly_lesser(value, value) is False
+    assert brs.is_float_strictly_lesser(value, value) is False
 
 
 def test_run_simulation_1():
@@ -261,17 +319,20 @@ def test_run_simulation_1():
     initialized from the start.
     '''
     t_0, time_limit = 30.0, 30.0
-    x_0, y_0 = 0.0, 0.0
-    x_min, x_max = 0.0, 20.0
-    y_min, y_max = -10.0, 10.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
     death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
-    start_bacteria, bacteria_limit = 2, 1000000
-    bact_list, flag, max_time = run_simulation(x_0, y_0, x_min, x_max,
-                            y_min, y_max, t_0, time_limit, death_coeff,
-                            reprod_coeff, move_coeff,
-                            start_bacteria, bacteria_limit)
+    initial_bacteria_number, bacteria_limit = 2, 1000000
+    bact_list, flag, max_time = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                                   z_min, x_max, y_max, z_max,
+                                                   t_0, time_limit,
+                                                   death_coeff, reprod_coeff,
+                                                   move_coeff,
+                                                   initial_bacteria_number,
+                                                   bacteria_limit)
 
-    assert len(bact_list) == start_bacteria
+    assert len(bact_list) == initial_bacteria_number
 
 
 def test_run_simulation_2():
@@ -280,15 +341,18 @@ def test_run_simulation_2():
     the simulation returns a max time reached that is t_0.
     '''
     t_0, time_limit = 30.0, 30.0
-    x_0, y_0 = 0.0, 0.0
-    x_min, x_max = 0.0, 20.0
-    y_min, y_max = -10.0, 10.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
     death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
-    start_bacteria, bacteria_limit = 2, 1000000
-    bact_list, flag, max_time = run_simulation(x_0, y_0, x_min, x_max,
-                            y_min, y_max, t_0, time_limit, death_coeff,
-                            reprod_coeff, move_coeff,
-                            start_bacteria, bacteria_limit)
+    initial_bacteria_number, bacteria_limit = 2, 1000000
+    bact_list, flag, max_time = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                                   z_min, x_max, y_max, z_max,
+                                                   t_0, time_limit,
+                                                   death_coeff, reprod_coeff,
+                                                   move_coeff,
+                                                   initial_bacteria_number,
+                                                   bacteria_limit)
 
     assert max_time == pytest.approx(t_0)
 
@@ -301,19 +365,21 @@ def test_run_simulation_3():
     different lists. The test checks that the lists have the same elements.
     '''
     t_0, time_limit = 0.0, 10.0
-    x_0, y_0 = 0.0, 0.0
-    x_min, x_max = 0.0, 20.0
-    y_min, y_max = -10.0, 10.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
     death_coeff, reprod_coeff, move_coeff = 0.1, 0.1, 1.0
-    start_bacteria, bacteria_limit ,seed = 2, 1000000, 420
-    result_1 = run_simulation(x_0, y_0, x_min, x_max,
-                              y_min, y_max, t_0, time_limit,
-                              death_coeff, reprod_coeff, move_coeff,
-                              start_bacteria, bacteria_limit, seed)
-    result_2 = run_simulation(x_0, y_0, x_min, x_max,
-                              y_min, y_max, t_0, time_limit,
-                              death_coeff, reprod_coeff, move_coeff,
-                              start_bacteria, bacteria_limit, seed)
+    initial_bacteria_number, bacteria_limit, seed = 2, 1000000, 420
+    result_1 = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                  z_min, x_max, y_max, z_max,
+                                  t_0, time_limit, death_coeff, reprod_coeff,
+                                  move_coeff, initial_bacteria_number,
+                                  bacteria_limit, seed)
+    result_2 = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                  z_min, x_max, y_max, z_max,
+                                  t_0, time_limit, death_coeff, reprod_coeff,
+                                  move_coeff, initial_bacteria_number,
+                                  bacteria_limit, seed)
 
     assert result_1 == result_2
 
@@ -322,7 +388,7 @@ def test_date_name_file_1():
     '''
     Testing that the name produced by the function is effectively a string.
     '''
-    result = date_name_file()
+    result = brs.date_name_file()
     assert type(result) == str
 
 
@@ -332,7 +398,7 @@ def test_date_name_file_2():
     that isn't a string is passed.
     '''
     with pytest.raises(TypeError):
-        result = date_name_file(33.3)
+        result = brs.date_name_file(33.3)
 
 
 def test_save_data_json_1(tmp_path):
@@ -345,7 +411,7 @@ def test_save_data_json_1(tmp_path):
     '''
     data = [1, 2, 3, 4]
     results_folder = str(tmp_path) + '/'
-    save_data_json(data, 'test.json', results_folder)
+    brs.save_data_json(data, 'test.json', results_folder)
 
     filepath = tmp_path / 'test.json'
     with open(filepath, 'r') as json_file:
@@ -353,8 +419,8 @@ def test_save_data_json_1(tmp_path):
         assert observed == data
 
 
-##############################################################################
-# tests for analysis.py
+################################################################################
+# tests for brownie_analysis.py
 def test_load_data_json_1(tmp_path):
     '''
     Testing that the function will properly load a dictionary by first
@@ -369,7 +435,7 @@ def test_load_data_json_1(tmp_path):
         json.dump(data, json_file, indent=4)
 
     str_path = str(filepath)
-    observed = load_data_json(str_path)
+    observed = bra.load_data_json(str_path)
     assert observed == data
 
 
@@ -379,4 +445,4 @@ def test_parse_data_dict_1():
     raise a ValueError.
     '''
     with pytest.raises(ValueError):
-        parse_data_dict({})
+        bra.parse_data_dict({})
