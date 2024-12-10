@@ -58,8 +58,8 @@ def multiple_histogram_plots(coords_dict_lists, figure_title, x_0, y_0, z_0):
 def multiple_distributions_routine(bacteria_list, time_of_interest,
                                    figure_title, x_0, y_0, z_0):
     '''
-    Routine to evaluate eigth distributions for x, y, z and the radii,
-    for alive and dead bacteria, by means of histograms and gaussians.
+    Routine to evaluate four distributions for x, y, z and the radii,
+    by means of histograms, three gaussians and a chi squared bells.
     Parameters:
         bacteria_list: list of dictionaries, representing the bacteria.
         time_of_interest: float, the time at which the distributions are
@@ -92,10 +92,10 @@ def multiple_distributions_routine(bacteria_list, time_of_interest,
     coords_dict_lists['z'] = zs
     
     xyzs = []
-    for tuple in live_xyz:
-        xyzs.append(tuple)
-    for tuple in dead_xyz:
-        xyzs.append(tuple)
+    for some_tuple in live_xyz:
+        xyzs.append(some_tuple)
+    for some_tuple in dead_xyz:
+        xyzs.append(some_tuple)
 
     coords_dict_lists['radial^2'] = bra.radial_distribution(xyzs, x_0, y_0, z_0)
     multiple_histogram_plots(coords_dict_lists, figure_title, x_0, y_0, z_0)

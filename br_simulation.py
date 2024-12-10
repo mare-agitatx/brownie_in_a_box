@@ -131,6 +131,10 @@ def enforce_boundaries_1d(point_to_check, interval_min, interval_max):
 def space_state_updater(x, y, z, x_min, y_min, z_min,
                         x_max, y_max, z_max, dt, rng=None):
     '''
+    It updates a given point position by drawing randomly a direction on a
+    spherical surface (to implement isotropy) and then it jumps on that 
+    direction by a random gap drawn by the brownian formula. These calculations
+    are made in spherical coordinates and then projected in cartesian ones.
     Parameters:
         x, y, z: floats, the coordinates the function works on.
         x_min, y_min, z_min: floats, interval minimums.
@@ -159,6 +163,10 @@ def space_state_updater(x, y, z, x_min, y_min, z_min,
     # to obtain a uniform sphere
     phi = uniform_distribution(0, 2 * np.pi, rng)
     cos_of_theta = uniform_distribution(-1, 1, rng)
+
+    # sin_of_theta is calculated as plus the square root
+    # of a function of the cosine since theta is always between 0 and pi
+    # so its sine is always positive
     sin_of_theta = np.sqrt(1 - cos_of_theta ** 2).astype(float)
 
     # draw a radius from the brownian motion,
@@ -273,6 +281,7 @@ def is_float_strictly_lesser(value, threshold):
     is_value_under = (value < threshold)
     is_value_not_equal = not np.isclose(value, threshold)
     result = (is_value_under and is_value_not_equal)
+
     return result
 
 
@@ -454,7 +463,7 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
 
 def date_name_file(extension=None):
     '''
-    Produces a string with the actual date and time to be employed as a
+    Produces a string with the numerical date and time to be employed as a
     filename, and optionally adds an extension.
     Parameters:
         extension: string if given, a string added to the end of the date
@@ -470,12 +479,15 @@ def date_name_file(extension=None):
 
     # datetime object containing current date and time
     now = datetime.now()
+
     # YYYY_mm_dd_H_M_S format for the date string
     date_string = now.strftime('%Y_%m_%d_%H_%M_%S')
+
     if extension is None:
         filename = date_string
     else:
         filename = date_string + extension
+
     return filename
 
 

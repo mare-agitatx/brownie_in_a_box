@@ -6,7 +6,7 @@ import numpy as np
 
 
 ################################################################################
-# tests for brownie_simulation.py
+# tests for br_simulation.py
 def test_gaussian_distribution_1():
     '''
     Testing reproducibility of the distribution: to do so, some values are
@@ -420,7 +420,7 @@ def test_save_data_json_1(tmp_path):
 
 
 ################################################################################
-# tests for brownie_analysis.py
+# tests for br_analysis.py
 def test_load_data_json_1(tmp_path):
     '''
     Testing that the function will properly load a dictionary by first

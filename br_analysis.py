@@ -15,17 +15,18 @@ def load_data_json(filepath):
     '''
     with open(filepath, 'r') as json_file:
         data = json.load(json_file)
+
     return data
 
 
 def parse_data_dict(data_dictionary):
     '''
-    Loads some data from the dictionary given to be later analyzed.
+    Parses some data from the dictionary given to be later analyzed.
     Parameters:
         data_dictionary: dictionary containing the data from file.
     Returns:
         parameters_dict: dictionary with the parameters of the simulation.
-        bacterium_states_out:
+        bacteria_list: list of dictionaries, the entries represent bacteria.
     Raises:
         ValueError: if the given data_dictionary is empty.
     '''
@@ -42,7 +43,7 @@ def parse_data_dict(data_dictionary):
 
 def space_value_at_some_time(bacterium_dict, time_of_interest):
     '''
-    Finds the bacterium position at some time and distinguishes the cases
+    Finds the bacterium's position at some time and distinguishes the cases
     where said bacterium is alive or dead.
     Parameters:
         bacterium_dict: dictionary, represents the bacterium and all its
@@ -77,7 +78,7 @@ def space_value_at_some_time(bacterium_dict, time_of_interest):
 def space_distribution_at_some_time(bacteria_list, time_of_interest):
     '''
     Calculates two spatial distributions for the given bacteria input,
-    separating between dead bacteria and live bacteria.
+    distinguishing between dead bacteria and live bacteria.
     Parameters:
         bacteria_list: list of dictionaries, the entries represent bacteria.
         time_of_interest: the time at which the distributions are evaluated.
@@ -110,10 +111,10 @@ def radial_distribution(list_xyz, x_0, y_0, z_0):
     Function to generate radial values from some origin, given a list of
     coordinates and the origin's coordinates.
     Parameters:
-        list_xyz:
-        x_0, y_0, z_0:
+        list_xyz: list of tuples, representing coordinates of points.
+        x_0, y_0, z_0: floats, coordinates of the origin.
     Returns:
-        radii2:
+        radii2: list of floats, the radii squared values calculated.
     '''
     radii2 = []
     for x, y, z in list_xyz:
