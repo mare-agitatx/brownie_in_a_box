@@ -312,6 +312,7 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
                     transition_names.
     '''
     # initializing some variables
+    times_to_print = np.linspace(t_0, time_limit, 11).tolist()
     active_bacteria_counter = initial_bacteria_number
     dead_bacteria_counter = 0
     transition_names = ('death', 'reproduction', 'movement')
@@ -358,6 +359,21 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
 
         for bacterium in bacteria:
             last_state = bacterium['states'][-1]
+
+            # print a time check every ten 
+            # parts of the total time, in
+            # order to have an output of the
+            # running simulation, especially
+            # should it happen that it gets stuck;
+            # the current time and the alive bacteria
+            # are printed
+            for time in times_to_print:
+                if max(old_active_times) > time:
+                    print(f't={time:.2f} has been reached',
+                          f'out of {time_limit:.2f}.')
+                    print(f'The alive bacteria as of now are {len(bacteria)}',
+                          f'out of {bacteria_limit}.')
+                    times_to_print.remove(time)
 
             # ignore dead bacteria
             is_dead = (last_state['event'] == 'death')
