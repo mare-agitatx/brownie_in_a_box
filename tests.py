@@ -283,35 +283,6 @@ def test_draw_random_event_2():
         event = brs.draw_random_event(transitions_names, rates)
 
 
-def test_is_float_strictly_lesser_1():
-    '''
-    Testing that, if value_1 is less than value_2 as expected, the
-    function recognizes it.
-    '''
-    value_1 = 5.0
-    value_2 = 10.0
-    assert brs.is_float_strictly_lesser(value_1, value_2) is True
-
-
-def test_is_float_strictly_lesser_2():
-    '''
-    Testing that, if value_2 is more than value_1 as expected, the
-    function recognizes it.
-    '''
-    value_1 = 5.0
-    value_2 = 10.0
-    assert brs.is_float_strictly_lesser(value_2, value_1) is False
-
-
-def test_is_float_strictly_lesser_3():
-    '''
-    Testing that the value is not strictly less than itself, and
-    the function recognizes it.
-    '''
-    value = 10.0
-    assert brs.is_float_strictly_lesser(value, value) is False
-
-
 def test_run_simulation_1():
     '''
     Testing that, by giving an initial time already at the time limit value,
@@ -364,7 +335,7 @@ def test_run_simulation_3():
     simulation is called two times with the same inputs and stored in two
     different lists. The test checks that the lists have the same elements.
     '''
-    t_0, time_limit = 0.0, 10.0
+    t_0, time_limit = 0.0, 20.0
     x_0, y_0, z_0 = 0.0, 0.0, 0.0
     x_min, y_min, z_min = -10.0, -10.0, -10.0
     x_max, y_max, z_max = 10.0, 10.0, 10.0
@@ -383,6 +354,93 @@ def test_run_simulation_3():
 
     assert result_1 == result_2
 
+
+def test_run_simulation_4():
+    '''
+    Testing that a simulation with a high death coefficient ends with a 
+    death result.
+    '''
+    death_coeff = 100.0
+    t_0, time_limit = 0.0, 10.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
+    reprod_coeff, move_coeff = 0.1, 1.0
+    initial_bacteria_number, bacteria_limit, seed = 200, 1000000, 314
+    result = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                z_min, x_max, y_max, z_max,
+                                t_0, time_limit, death_coeff, reprod_coeff,
+                                move_coeff, initial_bacteria_number,
+                                bacteria_limit, seed)
+    bacteria, flag, max_time = result
+    
+    assert flag == 'all_dead'
+    
+    
+def test_run_simulation_5():
+    '''
+    Testing that a simulation with a high reproduction coefficient and a 
+    mid-low bacteria limit ends with a bacteria limit halt.
+    '''
+    reprod_coeff = 100.0
+    t_0, time_limit = 0.0, 50.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
+    death_coeff, move_coeff = 0.1, 1.0
+    initial_bacteria_number, bacteria_limit, seed = 50, 1000, 2207
+    result = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                z_min, x_max, y_max, z_max,
+                                t_0, time_limit, death_coeff, reprod_coeff,
+                                move_coeff, initial_bacteria_number,
+                                bacteria_limit, seed)
+    bacteria, flag, max_time = result
+    
+    assert flag == 'halted_simulation'
+
+
+def test_run_simulation_6():
+    '''
+    Testing that a simulation with a high movement coefficient and reasonable
+    reproduction and death coefficients ends reaching the max time.
+    '''
+    move_coeff = 100.0
+    t_0, time_limit = 0.0, 50.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
+    death_coeff, reprod_coeff = 0.05, 0.1
+    initial_bacteria_number, bacteria_limit, seed = 3, 1000, 628
+    result = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                z_min, x_max, y_max, z_max,
+                                t_0, time_limit, death_coeff, reprod_coeff,
+                                move_coeff, initial_bacteria_number,
+                                bacteria_limit, seed)
+    bacteria, flag, max_time = result
+    
+    assert flag == 'time_limit'
+
+
+def test_run_simulation_7():
+    '''
+    Testing that a simulation that halts at the bacteria limit is halted when
+    the limit is met exactly.
+    '''
+    reprod_coeff = 100.0
+    t_0, time_limit = 0.0, 50.0
+    x_0, y_0, z_0 = 0.0, 0.0, 0.0
+    x_min, y_min, z_min = -10.0, -10.0, -10.0
+    x_max, y_max, z_max = 10.0, 10.0, 10.0
+    death_coeff, move_coeff = 0.1, 1.0
+    initial_bacteria_number, bacteria_limit, seed = 50, 1000, 2207
+    result = brs.run_simulation(x_0, y_0, z_0, x_min, y_min,
+                                z_min, x_max, y_max, z_max,
+                                t_0, time_limit, death_coeff, reprod_coeff,
+                                move_coeff, initial_bacteria_number,
+                                bacteria_limit, seed)
+    bacteria, flag, max_time = result
+    
+    assert len(bacteria) == bacteria_limit
 
 def test_date_name_file_1():
     '''
