@@ -121,3 +121,36 @@ def radial_distribution(list_xyz, x_0, y_0, z_0):
         r2 = ((x - x_0)**2 + (y - y_0)**2 + (z - z_0)**2)
         radii2.append(r2)
     return radii2
+
+
+def angular_distribution(list_xyz, x_0, y_0, z_0):
+    '''
+    Function to generate theta and phi values from some origin,
+    given a list of coordinates and the origin's coordinates.
+    Theta is the polar angle, phi the azimutal angle in a
+    spherical reference system.
+    Parameters:
+        list_xyz: list of tuples, representing coordinates of points.
+        x_0, y_0, z_0: floats, coordinates of the origin.
+    Returns:
+        thetas: list of floats, the polar values calculated.
+        phis: list of floats, the azimutal values calculated.
+    '''
+    thetas, phis = [], []
+    for x, y, z in list_xyz:
+        is_the_origin = np.isclose(x, x_0)
+        is_the_origin = is_the_origin and np.isclose(y, y_0)
+        is_the_origin = is_the_origin and np.isclose(z, z_0)
+        if is_the_origin is True:
+            thetas.append(0.0)
+            phis.append(0.0)
+            continue
+
+        r2 = (x - x_0)**2 + (y - y_0)**2 + (z - z_0)**2
+        theta = np.arccos((z - z_0)/(np.sqrt(r2))).astype(float)
+        thetas.append(theta)
+        R2 = (x - x_0)**2 + (y - y_0)**2
+        phi = np.arccos((x - x_0)/(np.sqrt(R2))).astype(float)
+        phi *= np.sign(y).astype(float)
+        phis.append(phi)
+    return thetas, phis
