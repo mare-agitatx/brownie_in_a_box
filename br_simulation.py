@@ -262,29 +262,6 @@ def draw_random_event(transition_names, transition_rates, rng=None):
     return event
 
 
-def is_float_strictly_lesser(value, threshold):
-    '''
-    Comparison check for the value being under the threshold strictly,
-    meaning that the value must be at the same time under the threshold and
-    not close to it.
-    This function was written since floats suffer from equality comparisons and
-    "closeness" is a delicate concept that suffers from the approximations of
-    the float format itself, producing usually underflows and errors with very
-    little values. These errors can also influence inequalities between
-    floats if those floats are very close.
-    Parameters:
-        value: float, the number that should be littler.
-        threshold: float, the number that should be bigger.
-    Returns:
-        result: boolean, True if value is lesser than and far from threshold.
-    '''
-    is_value_under = (value < threshold)
-    is_value_not_equal = not np.isclose(value, threshold)
-    result = (is_value_under and is_value_not_equal)
-
-    return result
-
-
 def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
                    t_0, time_limit, death_coefficient,
                    reproduction_coefficient, movement_coefficient,
@@ -401,12 +378,19 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
             # will stop and the simulation will finish.
             # if instead total_time is over the time
             # limit, the bacterium will be skipped
-            # from being updated
+            # from being updated; the bacterium also
+            # will be skipped if its time is very close
+            # to the limit as the inclusion of float values
+            # deemed close by numpy.isclose() may
+            # sometimes produce weird values and
+            # precision errors
             total_time = observed_time + dt
-            if is_float_strictly_lesser(total_time, time_limit) is True:
+            if total_time < time_limit:
                 active_bacteria_counter += 1
                 active_times.append(total_time)
-            elif is_float_strictly_lesser(total_time, time_limit) is False:
+            elif np.isclose(total_time, time_limit):
+                continue
+            elif total_time > time_limit:
                 continue
 
             # computing the transition event
