@@ -289,24 +289,26 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
                     transition_names.
     '''
     # initializing some variables
-    times_to_print = np.linspace(t_0, time_limit, 11).tolist()
-    active_bacteria_counter = initial_bacteria_number
-    dead_bacteria_counter = 0
     transition_names = ('death', 'reproduction', 'movement')
-    bacteria = []
+    active_bacteria, inactive_bacteria, dead_bacteria = [], [], []
+    N_bacteria = initial_bacteria_number
     if seed is not None:
         rng = np.random.default_rng(seed)
     else:
         rng = None
 
-    # defining here active_times or else
-    # the assignment 'old_active_times = active_times'
-    # in the while loop will raise an error. Also, by
-    # fixing it to t_0, if the while loop skips the evolution
+    # defining here active_times and old_max_time or else
+    # the assignment 'max_time = old_max_time'
+    # in the while loop will raise an error and the
+    # loop itself won't start with the active times list
+    # being empty, since it is the condition that keeps
+    # the loop running. Also, by fixing it to t_0,
+    # if the while loop skips the evolution
     # of bacteria for any reason, the simulation will end
     # with max_time_reached = t_0 which is the only
     # logical conclusion
-    active_times = [t_0]
+    active_turn_times = [t_0]
+    old_max_turn_time, max_turn_time = t_0, t_0
 
     # initialize bacteria as list of dictionaries;
     # states are represented by dictionaries in a list
@@ -327,34 +329,23 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
                        'x': x_0, 'y': y_0, 'z': z_0,
                        'event': 'birth'}
         bacterium['states'].append(first_state)
-        bacteria.append(bacterium)
+        active_bacteria.append(bacterium)
 
-    while active_bacteria_counter != 0:
-        active_bacteria_counter = 0
-        old_active_times = active_times
-        active_times = []
+    while active_bacteria != []:
+        active_turn_times = []
 
-        for bacterium in bacteria:
+        for bacterium in active_bacteria:
             last_state = bacterium['states'][-1]
 
-            # print a time check every ten 
-            # parts of the total time, in
-            # order to have an output of the
-            # running simulation, especially
-            # should it happen that it gets stuck;
-            # the current time and the alive bacteria
-            # are printed
-            for time in times_to_print:
-                if max(old_active_times) > time:
-                    print(f't={time:.2f} has been reached',
-                          f'out of {time_limit:.2f}.')
-                    print(f'The alive bacteria as of now are {len(bacteria)}',
-                          f'out of {bacteria_limit}.')
-                    times_to_print.remove(time)
-
-            # ignore dead bacteria
-            is_dead = (last_state['event'] == 'death')
-            if is_dead is True:
+            # ignore dead bacteria and 
+            # store them in a separate list
+            # so they aren't checked in 
+            # the active list of bacteria, to
+            # optimize the code usage of resources
+            is_bacterium_dead = (last_state['event'] == 'death')
+            if is_bacterium_dead is True:
+                dead_bacteria.append(bacterium)
+                active_bacteria.remove(bacterium)
                 continue
 
             # computing new interval of residency
@@ -371,26 +362,25 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
 
             # checking that the total time of this state
             # doesn't exceed the time_limit: if it doesn't,
-            # the active counter keeping the while loop
-            # running is increased... when every bacteria
-            # that is still alive reaches the max time,
-            # this counter will remain to 0, the while loop
-            # will stop and the simulation will finish.
+            # the active list stores that time.
             # if instead total_time is over the time
             # limit, the bacterium will be skipped
-            # from being updated; the bacterium also
-            # will be skipped if its time is very close
-            # to the limit as the inclusion of float values
-            # deemed close by numpy.isclose() may
-            # sometimes produce weird values and
-            # precision errors
+            # from being updated by being stored in the
+            # inactive list of bacteria and then
+            # the code will skip its evolution;
+            # bacteria with time too close to the 
+            # limit are cut off by design, to avoid
+            # precision errors due to float comparison
             total_time = observed_time + dt
             if total_time < time_limit:
-                active_bacteria_counter += 1
-                active_times.append(total_time)
+                active_turn_times.append(total_time)
             elif np.isclose(total_time, time_limit):
+                inactive_bacteria.append(bacterium)
+                active_bacteria.remove(bacterium)
                 continue
             elif total_time > time_limit:
+                inactive_bacteria.append(bacterium)
+                active_bacteria.remove(bacterium)
                 continue
 
             # computing the transition event
@@ -431,34 +421,66 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
                              'x': x, 'y': y, 'z': z,
                              'event': 'birth'}
                 new_bacterium['states'].append(new_state)
-                bacteria.append(new_bacterium)
-            # if the event is death, the death counter
-            # is increased
-            elif event == Event.DEATH.value:
-                dead_bacteria_counter += 1
+                active_bacteria.append(new_bacterium)
 
-        N = len(bacteria)
+            # it can happen that when 
+            # inactive or dead bacteria are removed
+            # from the active ones the printed
+            # time goes back... in order to prevent this 
+            # the following check is done; the print
+            # happens in the next block
+            max_turn_time = max(active_turn_times)
+            if max_turn_time < old_max_turn_time:
+                max_turn_time = old_max_turn_time
+
+            # the following print uses the 
+            # return carriage \r, so that it 
+            # prints on itself on stdout and
+            # doesn't clog the screen with 
+            # lines of update
+            N_bacteria = len(active_bacteria) + len(dead_bacteria)
+            N_bacteria += len(inactive_bacteria)
+            print(f'Bacteria computed are {N_bacteria},',
+                  f'limit is {bacteria_limit};',
+                  f't={max_turn_time:.4f} out of {time_limit:.4f}.', end='\r')
+            old_max_turn_time = max_turn_time
+
+            # checking if the total bacteria is
+            # above the bacteria_limit: if yes
+            # the simulation is halted. This check
+            # is nested inside the for cycle, so that 
+            # the simulation halts when the limit is met exactly
+            # by checking every active bacterium
+            if N_bacteria >= bacteria_limit:
+                print('\nSimulation halted. Too many bacteria spawned.')
+                flag = 'halted_simulation'
+                bacteria = dead_bacteria + inactive_bacteria + active_bacteria
+                return bacteria, flag, max_turn_time
+            
         # checking if every bacterium died:
-        # the simulation is then stopped
-        if N == dead_bacteria_counter:
-            print('Simulation done. All bacteria died.')
+        # the simulation is then stopped;
+        # this check is nested out of the for loop
+        # and inside the while loop, so that the check doesn't
+        # happen for every single bacterium but for every turn
+        if active_bacteria == [] and inactive_bacteria == []:
+            print('\nSimulation done. All bacteria died.')
             flag = 'all_dead'
-            max_time = max(active_times)
-            return bacteria, flag, max_time
+            bacteria = dead_bacteria
+            return bacteria, flag, max_turn_time
 
-        # checking if the total bacteria is
-        # above the bacteria_limit: if yes
-        # the simulation is halted
-        if N > bacteria_limit:
-            print('Simulation halted. Too many bacteria spawned.')
-            flag = 'halted_simulation'
-            max_time = max(active_times)
-            return bacteria, flag, max_time
-
-    print('Simulation done. Time limit reached.')
+    # the end by time limit happens automatically
+    # if the other conditions aren't met; the time
+    # limit won't be met exactly since it would 
+    # require a float equality comparison, which is
+    # notoriously tricky. Values too close to the limit
+    # will be cut off by design, since it is a very 
+    # limited number of states that don't give extra
+    # info and cost too much to retrieve. I chose
+    # to exclude them in favor of reliability of code
+    print('\nSimulation done. Time limit reached.')
     flag = 'time_limit'
-    max_time = max(old_active_times)
-    return bacteria, flag, max_time
+    bacteria = dead_bacteria + inactive_bacteria
+    return bacteria, flag, old_max_turn_time
 
 
 def date_name_file(extension=None):
@@ -569,13 +591,12 @@ if __name__ == "__main__":
                                               movement_coefficient,
                                               initial_bacteria_number,
                                               bacteria_limit, seed)
-    print('Bacteria total: ', len(bacteria))
+    
+    print('Saving the result...')
     simulation_dict['bacteria_final_number'] = len(bacteria)
     simulation_dict['bacteria_list'] = bacteria
     simulation_dict['result_flag'] = flag
     simulation_dict['max_time_reached'] = max_time
-
-    print('Saving the result...')
     filename = date_name_file('.json')
     results_folder = config.get('folders', 'results_folder')
     save_data_json(simulation_dict, filename, results_folder)
