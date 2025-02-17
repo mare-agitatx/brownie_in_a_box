@@ -440,8 +440,9 @@ def run_simulation(x_0, y_0, z_0, x_min, y_min, z_min, x_max, y_max, z_max,
             # lines of update
             N_bacteria = len(active_bacteria) + len(dead_bacteria)
             N_bacteria += len(inactive_bacteria)
-            print(f'Bacteria computed are {N_bacteria},',
-                  f'limit is {bacteria_limit};',
+            print(f'Bacteria computed={N_bacteria},',
+                  f'active={len(active_bacteria)},',
+                  f'limit={bacteria_limit};',
                   f't={max_turn_time:.4f} out of {time_limit:.4f}.', end='\r')
             old_max_turn_time = max_turn_time
 
