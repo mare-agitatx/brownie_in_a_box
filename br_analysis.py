@@ -52,7 +52,7 @@ def space_value_at_some_time(bacterium_dict, time_of_interest):
                           evaluated.
     Returns:
         x, y, z: floats, coordinates of the bacterium at said time.
-        flag: string, status of the bacterium at said time.
+        event: string, status of the bacterium at said time.
     '''
     bacterium_states = bacterium_dict['states']
     first_state = bacterium_states[0]
@@ -68,11 +68,7 @@ def space_value_at_some_time(bacterium_dict, time_of_interest):
         z = state_dict['z']
         event = state_dict['event']
 
-    if event == 'death':
-        flag = 'dead'
-    else:
-        flag = 'alive'
-    return x, y, z, flag
+    return x, y, z, event
 
 
 def space_distribution_at_some_time(bacteria_list, time_of_interest):
@@ -86,22 +82,17 @@ def space_distribution_at_some_time(bacteria_list, time_of_interest):
         output_dict: dictionary, has four entries that are lists with two
                      lists for x and y of live bacteria and two other lists
                      for coordinates of dead bacteria.
-    Raises:
-        ValueError: if an unexpected flag is encountered while assigning
-                    the lists.
     '''
     live_xyz, dead_xyz = [], []
     for bacterium_dict in bacteria_list:
-        x, y, z, flag = space_value_at_some_time(bacterium_dict,
+        x, y, z, event = space_value_at_some_time(bacterium_dict,
                                                  time_of_interest)
-        if flag == 'alive':
-            live_xyz.append((x, y, z))
-        elif flag == 'dead':
-            dead_xyz.append((x, y, z))
-        elif flag is None:
+        if event is None:
             continue
+        elif event == 'death':
+            dead_xyz.append((x, y, z))
         else:
-            raise ValueError('Unrecognized flag.')
+            live_xyz.append((x, y, z))
 
     return live_xyz, dead_xyz
 
